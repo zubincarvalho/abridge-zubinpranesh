@@ -1,0 +1,7 @@
+{
+  "source_id": "note-001",
+  "source_type": "encounter_note",
+  "label": "Clinic note - low back pain follow-up (synthetic, Abridge-style)",
+  "content": "SUBJECTIVE: Jordan Rivera is a 47-year-old presenting with low back pain radiating down the left leg, ongoing for approximately 8 weeks. Pain is worse with prolonged sitting and bending. She reports difficulty sitting through a full workday and interrupted sleep due to pain. She denies recent trauma, fever, unexplained weight loss, saddle anesthesia, and bowel or bladder dysfunction. No history of cancer.\n\nOBJECTIVE: Straight-leg raise is positive on the left at 40 degrees. Sensation decreased over the left lateral calf. Strength 5/5 throughout. Reflexes symmetric.\n\nASSESSMENT: Suspected lumbar radiculopathy (M54.16).\n\nPLAN: Naproxen 500 mg twice daily is listed on the medication list. Referral to physical therapy is in place. MRI lumbar spine without contrast ordered to evaluate for nerve root compression and to assess candidacy for epidural steroid injection or surgical referral if conservative measures fail. Return in 4 weeks or sooner if red-flag symptoms develop.",
+  "fhir_resource_type": null
+}

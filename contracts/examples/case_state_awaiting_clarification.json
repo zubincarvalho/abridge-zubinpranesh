@@ -1,0 +1,448 @@
+{
+  "case_id": "case-demo-001",
+  "status": "awaiting_clarification",
+  "created_at": "2026-07-18T16:00:00Z",
+  "updated_at": "2026-07-18T16:04:30Z",
+  "synthetic": true,
+  "patient": {
+    "patient_id": "pt-demo-001",
+    "display_name": "Jordan Rivera (synthetic)",
+    "birth_date": "1979-04-02",
+    "sex": "female",
+    "chart_items": [
+      {
+        "source_id": "fhir-cond-001",
+        "category": "condition",
+        "display": "Chronic low back pain with radiation to left leg",
+        "detail": "Onset approximately 8 weeks ago; suspected lumbar radiculopathy (M54.16)"
+      },
+      {
+        "source_id": "fhir-obs-slr-001",
+        "category": "observation",
+        "display": "Straight-leg raise: positive on left at 40 degrees",
+        "detail": "Exam observation recorded this encounter"
+      },
+      {
+        "source_id": "fhir-med-001",
+        "category": "medication",
+        "display": "Naproxen 500 mg twice daily (NSAID)",
+        "detail": "Active medication on the list; start date not documented"
+      },
+      {
+        "source_id": "fhir-ref-pt-001",
+        "category": "referral",
+        "display": "Referral to physical therapy",
+        "detail": "Referral order present; completion status not documented"
+      },
+      {
+        "source_id": "fhir-sr-mri-001",
+        "category": "service_request",
+        "display": "MRI lumbar spine without contrast ordered (CPT 72148)",
+        "detail": "Ordered this encounter"
+      },
+      {
+        "source_id": "fhir-cond-002",
+        "category": "condition",
+        "display": "Seasonal allergic rhinitis",
+        "detail": "Unrelated active condition (should be excluded from the packet)"
+      }
+    ]
+  },
+  "requested_service": {
+    "service_name": "MRI lumbar spine without contrast",
+    "code": "72148",
+    "code_system": "CPT",
+    "modality": "MRI",
+    "body_site": "lumbar spine"
+  },
+  "clinical_indication": "Chronic low back pain with radicular symptoms; suspected lumbar radiculopathy",
+  "indication_codes": [
+    "M54.16",
+    "M54.41"
+  ],
+  "encounter_note": {
+    "source_id": "note-001",
+    "title": "Clinic note - low back pain follow-up (synthetic, Abridge-style)",
+    "text": "SUBJECTIVE: Jordan Rivera is a 47-year-old presenting with low back pain radiating down the left leg, ongoing for approximately 8 weeks. Pain is worse with prolonged sitting and bending. She reports difficulty sitting through a full workday and interrupted sleep due to pain. She denies recent trauma, fever, unexplained weight loss, saddle anesthesia, and bowel or bladder dysfunction. No history of cancer.\n\nOBJECTIVE: Straight-leg raise is positive on the left at 40 degrees. Sensation decreased over the left lateral calf. Strength 5/5 throughout. Reflexes symmetric.\n\nASSESSMENT: Suspected lumbar radiculopathy (M54.16).\n\nPLAN: Naproxen 500 mg twice daily is listed on the medication list. Referral to physical therapy is in place. MRI lumbar spine without contrast ordered to evaluate for nerve root compression and to assess candidacy for epidural steroid injection or surgical referral if conservative measures fail. Return in 4 weeks or sooner if red-flag symptoms develop."
+  },
+  "encounter_transcript": {
+    "source_id": "transcript-001",
+    "text": "Clinician: How long has the pain been going on now? Patient: It's been about two months, and it shoots down my left leg. Clinician: Any numbness around the groin, trouble with bladder or bowels, fevers, weight loss? Patient: No, nothing like that. Clinician: Okay. Let's get an MRI of your lower back to see what's going on with that nerve."
+  },
+  "policy": {
+    "policy_id": "MHP-IMG-2201",
+    "payer_name": "Meridian Health Plans (fictional)",
+    "policy_title": "Medical Necessity Policy: Lumbar Spine MRI",
+    "service_description": "MRI lumbar spine without contrast (CPT 72148)",
+    "source_document": "data/policies/lumbar_mri_policy.md",
+    "synthetic": true
+  },
+  "criteria": [
+    {
+      "criterion_id": "LM-1",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Appropriate diagnosis or indication",
+      "requirement": "The record documents a clinical indication appropriate for lumbar spine MRI, such as suspected lumbar radiculopathy, with a corresponding diagnosis code.",
+      "category": "indication",
+      "applicability_note": null
+    },
+    {
+      "criterion_id": "LM-2",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Symptom duration of at least six weeks",
+      "requirement": "Symptoms (low back pain and/or radicular symptoms) have persisted for at least six (6) weeks, with the duration explicitly documented.",
+      "category": "duration",
+      "applicability_note": null
+    },
+    {
+      "criterion_id": "LM-3",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Completed and failed conservative treatment",
+      "requirement": "The patient has completed at least six (6) weeks of conservative treatment - such as physical therapy, anti-inflammatory medication, and/or a structured home-exercise program - without sufficient improvement. A referral to therapy or a prescription alone does not satisfy this criterion; completion and failure must both be documented.",
+      "category": "conservative_therapy",
+      "applicability_note": null
+    },
+    {
+      "criterion_id": "LM-4",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Relevant neurologic or examination findings",
+      "requirement": "The record documents neurologic or physical-examination findings consistent with the indication (e.g., positive straight-leg raise, dermatomal sensory change, motor weakness, or reflex asymmetry).",
+      "category": "exam_findings",
+      "applicability_note": null
+    },
+    {
+      "criterion_id": "LM-5",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Red-flag screening",
+      "requirement": "The record documents screening for red-flag conditions (e.g., trauma, cancer history, unexplained weight loss, fever, saddle anesthesia, bowel or bladder dysfunction), with findings noted as present or absent.",
+      "category": "red_flags",
+      "applicability_note": null
+    },
+    {
+      "criterion_id": "LM-6",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Functional limitation",
+      "requirement": "The record documents a functional limitation attributable to the symptoms (e.g., limitation of work, activities of daily living, or sleep).",
+      "category": "functional_limitation",
+      "applicability_note": null
+    },
+    {
+      "criterion_id": "LM-7",
+      "policy_id": "MHP-IMG-2201",
+      "label": "Clinical rationale for MRI",
+      "requirement": "The record documents why MRI results are expected to change management (e.g., evaluation for surgical or interventional candidacy).",
+      "category": "rationale",
+      "applicability_note": null
+    }
+  ],
+  "assessments": [
+    {
+      "criterion_id": "LM-1",
+      "status": "met",
+      "denial_risk": "low",
+      "rationale": "The note and problem list document suspected lumbar radiculopathy with ICD-10 M54.16, an appropriate indication for lumbar MRI.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm1-note",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "Suspected lumbar radiculopathy (M54.16)",
+          "span": {
+            "start": 585,
+            "end": 624
+          },
+          "fhir_path": null,
+          "confidence": "high",
+          "note": null
+        },
+        {
+          "evidence_id": "ev-lm1-fhir",
+          "source_id": "fhir-cond-001",
+          "source_type": "fhir_resource",
+          "excerpt": "Chronic low back pain with radiation to left leg",
+          "span": null,
+          "fhir_path": "Bundle.entry[fhir-cond-001].display",
+          "confidence": "high",
+          "note": null
+        }
+      ],
+      "clarification_question_id": null
+    },
+    {
+      "criterion_id": "LM-2",
+      "status": "met",
+      "denial_risk": "low",
+      "rationale": "Duration is explicitly documented as approximately 8 weeks in the note and about two months in the transcript, exceeding the six-week requirement.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm2-note",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "ongoing for approximately 8 weeks",
+          "span": {
+            "start": 102,
+            "end": 135
+          },
+          "fhir_path": null,
+          "confidence": "high",
+          "note": null
+        },
+        {
+          "evidence_id": "ev-lm2-tx",
+          "source_id": "transcript-001",
+          "source_type": "encounter_transcript",
+          "excerpt": "It's been about two months",
+          "span": {
+            "start": 61,
+            "end": 87
+          },
+          "fhir_path": null,
+          "confidence": "moderate",
+          "note": null
+        }
+      ],
+      "clarification_question_id": null
+    },
+    {
+      "criterion_id": "LM-3",
+      "status": "missing",
+      "denial_risk": "high",
+      "rationale": "The record shows an NSAID on the medication list and a physical-therapy referral, but neither establishes that six weeks of conservative treatment were completed without sufficient improvement. Completion and failure are not documented anywhere in the note, transcript, or chart.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm3-med",
+          "source_id": "fhir-med-001",
+          "source_type": "fhir_resource",
+          "excerpt": "Naproxen 500 mg twice daily (NSAID)",
+          "span": null,
+          "fhir_path": "Bundle.entry[fhir-med-001].display",
+          "confidence": "low",
+          "note": "A listed prescription is not evidence that treatment was completed or failed."
+        },
+        {
+          "evidence_id": "ev-lm3-ref",
+          "source_id": "fhir-ref-pt-001",
+          "source_type": "fhir_resource",
+          "excerpt": "Referral to physical therapy",
+          "span": null,
+          "fhir_path": "Bundle.entry[fhir-ref-pt-001].display",
+          "confidence": "low",
+          "note": "A referral is not evidence that therapy was completed."
+        }
+      ],
+      "clarification_question_id": "q-lm3-001"
+    },
+    {
+      "criterion_id": "LM-4",
+      "status": "met",
+      "denial_risk": "low",
+      "rationale": "Positive left straight-leg raise at 40 degrees and decreased sensation over the left lateral calf are documented examination findings consistent with the indication.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm4-slr",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "Straight-leg raise is positive on the left at 40 degrees",
+          "span": {
+            "start": 421,
+            "end": 477
+          },
+          "fhir_path": null,
+          "confidence": "high",
+          "note": null
+        },
+        {
+          "evidence_id": "ev-lm4-sens",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "Sensation decreased over the left lateral calf",
+          "span": {
+            "start": 479,
+            "end": 525
+          },
+          "fhir_path": null,
+          "confidence": "high",
+          "note": null
+        }
+      ],
+      "clarification_question_id": null
+    },
+    {
+      "criterion_id": "LM-5",
+      "status": "met",
+      "denial_risk": "low",
+      "rationale": "The note documents explicit negative screening for trauma, fever, weight loss, saddle anesthesia, bowel/bladder dysfunction, and cancer history.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm5-note",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "She denies recent trauma, fever, unexplained weight loss, saddle anesthesia, and bowel or bladder dysfunction. No history of cancer.",
+          "span": {
+            "start": 276,
+            "end": 408
+          },
+          "fhir_path": null,
+          "confidence": "high",
+          "note": null
+        }
+      ],
+      "clarification_question_id": null
+    },
+    {
+      "criterion_id": "LM-6",
+      "status": "weak",
+      "denial_risk": "medium",
+      "rationale": "Work and sleep impact are mentioned, but the limitation is not characterized in enough detail (frequency, severity) to fully satisfy the criterion.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm6-note",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "difficulty sitting through a full workday and interrupted sleep due to pain",
+          "span": {
+            "start": 199,
+            "end": 274
+          },
+          "fhir_path": null,
+          "confidence": "moderate",
+          "note": null
+        }
+      ],
+      "clarification_question_id": null
+    },
+    {
+      "criterion_id": "LM-7",
+      "status": "met",
+      "denial_risk": "low",
+      "rationale": "The plan documents that MRI results will guide evaluation for epidural steroid injection or surgical referral, i.e., results are expected to change management.",
+      "evidence": [
+        {
+          "evidence_id": "ev-lm7-note",
+          "source_id": "note-001",
+          "source_type": "encounter_note",
+          "excerpt": "MRI lumbar spine without contrast ordered to evaluate for nerve root compression and to assess candidacy for epidural steroid injection or surgical referral if conservative measures fail",
+          "span": {
+            "start": 737,
+            "end": 923
+          },
+          "fhir_path": null,
+          "confidence": "high",
+          "note": null
+        }
+      ],
+      "clarification_question_id": null
+    }
+  ],
+  "clarification_questions": [
+    {
+      "question_id": "q-lm3-001",
+      "criterion_ids": [
+        "LM-3"
+      ],
+      "question": "Have you completed at least six weeks of physical therapy, anti-inflammatory medication, or a home-exercise program without sufficient improvement?",
+      "why_needed": "The chart shows an NSAID on the medication list and a physical-therapy referral, but the policy requires documentation that at least six weeks of conservative treatment were completed without sufficient improvement. A referral or a prescription alone does not establish completion or failure.",
+      "suggested_action": "Confirm completion and outcome of conservative therapy; AuthLens will record your answer verbatim and re-evaluate.",
+      "status": "open"
+    }
+  ],
+  "clarifications": [],
+  "readiness_history": [
+    {
+      "label": "initial",
+      "score": 79,
+      "criteria_met": 5,
+      "criteria_weak": 1,
+      "criteria_missing": 1,
+      "criteria_conflicting": 0,
+      "criteria_not_applicable": 0,
+      "overall_denial_risk": "high",
+      "computed_at": "2026-07-18T16:04:00Z"
+    }
+  ],
+  "disclosure_decisions": [],
+  "packet": null,
+  "verification": null,
+  "form_draft": null,
+  "events": [
+    {
+      "event_id": "evt-001",
+      "case_id": "case-demo-001",
+      "sequence": 1,
+      "stage": "intake",
+      "status": "completed",
+      "title": "Intake complete: note, transcript, chart, requested service, and payer policy loaded",
+      "detail": "Synthetic demo fixture 'lumbar_mri_prior_auth' loaded.",
+      "related_ids": [],
+      "occurred_at": "2026-07-18T16:00:30Z"
+    },
+    {
+      "event_id": "evt-002",
+      "case_id": "case-demo-001",
+      "sequence": 2,
+      "stage": "policy_parsing",
+      "status": "completed",
+      "title": "Parsed policy MHP-IMG-2201 into 7 medical-necessity criteria",
+      "detail": null,
+      "related_ids": [
+        "LM-1",
+        "LM-2",
+        "LM-3",
+        "LM-4",
+        "LM-5",
+        "LM-6",
+        "LM-7"
+      ],
+      "occurred_at": "2026-07-18T16:01:00Z"
+    },
+    {
+      "event_id": "evt-003",
+      "case_id": "case-demo-001",
+      "sequence": 3,
+      "stage": "evidence_retrieval",
+      "status": "completed",
+      "title": "Searched note, transcript, and chart for all 7 criteria in parallel",
+      "detail": null,
+      "related_ids": [],
+      "occurred_at": "2026-07-18T16:02:00Z"
+    },
+    {
+      "event_id": "evt-004",
+      "case_id": "case-demo-001",
+      "sequence": 4,
+      "stage": "evidence_mapping",
+      "status": "completed",
+      "title": "Mapped 11 cited evidence excerpts to criteria",
+      "detail": null,
+      "related_ids": [],
+      "occurred_at": "2026-07-18T16:03:00Z"
+    },
+    {
+      "event_id": "evt-005",
+      "case_id": "case-demo-001",
+      "sequence": 5,
+      "stage": "gap_detection",
+      "status": "completed",
+      "title": "Classified criteria: 5 met, 1 weak, 1 missing (LM-3 conservative therapy)",
+      "detail": "Referral and prescription found but neither proves completed/failed therapy.",
+      "related_ids": [
+        "LM-3",
+        "LM-6"
+      ],
+      "occurred_at": "2026-07-18T16:04:00Z"
+    },
+    {
+      "event_id": "evt-006",
+      "case_id": "case-demo-001",
+      "sequence": 6,
+      "stage": "clarification",
+      "status": "started",
+      "title": "Generated 1 point-of-capture clarification question; awaiting clinician",
+      "detail": null,
+      "related_ids": [
+        "q-lm3-001"
+      ],
+      "occurred_at": "2026-07-18T16:04:30Z"
+    }
+  ]
+}
