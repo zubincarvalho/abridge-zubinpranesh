@@ -237,6 +237,22 @@ export type ApiEvidenceSource = {
   fhir_resource_type: string | null;
 };
 
+export type DemoScenario = {
+  scenario_id: string;
+  fixture_id: string;
+  title: string;
+  patient_display: string;
+  visit_summary: string;
+  requested_service: string;
+  payer: string;
+  policy_id: string;
+  expected_outcome: 'gap' | 'high_risk' | 'approved';
+  expected_outcome_label: string;
+  risk_level: 'low' | 'medium' | 'high';
+  description: string;
+  is_real_data: boolean;
+};
+
 // ── HTTP helper ────────────────────────────────────────────────────────────
 
 async function api<T>(method: string, path: string, body?: unknown): Promise<T> {
@@ -254,6 +270,14 @@ async function api<T>(method: string, path: string, body?: unknown): Promise<T> 
 }
 
 // ── Public API functions ───────────────────────────────────────────────────
+
+export function listScenarios(): Promise<DemoScenario[]> {
+  return api<DemoScenario[]>('GET', '/scenarios');
+}
+
+export function createCase(fixtureId: string): Promise<ApiCase> {
+  return api<ApiCase>('POST', '/cases', { fixture_id: fixtureId });
+}
 
 export function getDemoCase(): Promise<ApiCase> {
   return api<ApiCase>('GET', '/demo-case');

@@ -145,3 +145,187 @@
   padding: 7px 16px;
   color: var(--text-secondary);
 }
+
+/* ── Clinician Decision Section ── */
+.psp-decision-section {
+  border: 1.5px solid #3b82f6;
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: #eff6ff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.psp-decision-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #1d4ed8;
+}
+
+.psp-decision-sub {
+  font-size: 10.5px;
+  color: #3730a3;
+  line-height: 1.5;
+}
+
+.psp-decision-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.psp-decision-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 7px;
+  border: 1.5px solid;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: opacity 0.12s, transform 0.1s;
+  background: #fff;
+  width: 100%;
+}
+
+.psp-decision-btn:hover {
+  opacity: 0.85;
+  transform: translateX(1px);
+}
+
+.psp-decision-btn span:first-child {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.psp-decision-approve {
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+.psp-decision-approve span:first-child {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.psp-decision-info {
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+.psp-decision-info span:first-child {
+  background: #fef3c7;
+  color: #78350f;
+}
+
+.psp-decision-reject {
+  border-color: #ef4444;
+  color: #991b1b;
+}
+
+.psp-decision-reject span:first-child {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* ── Decision Result ── */
+.psp-decision-result {
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1.5px solid;
+}
+
+.psp-result-approved {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.psp-result-info {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.psp-result-rejected {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.psp-result-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.psp-result-approved .psp-result-icon { background: #dcfce7; color: #166534; }
+.psp-result-info .psp-result-icon     { background: #fef3c7; color: #78350f; }
+.psp-result-rejected .psp-result-icon { background: #fee2e2; color: #991b1b; }
+
+.psp-result-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.psp-result-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.psp-result-approved .psp-result-title { color: #166534; }
+.psp-result-info .psp-result-title     { color: #78350f; }
+.psp-result-rejected .psp-result-title { color: #991b1b; }
+
+.psp-result-note {
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.psp-result-undo {
+  font-size: 10px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.psp-result-undo:hover {
+  color: var(--text-secondary);
+}
+
+/* ── Pending note ── */
+.psp-pending-note {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  background: #f8fafc;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  line-height: 1.5;
+  text-align: center;
+}

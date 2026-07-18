@@ -8,7 +8,7 @@ submission endpoint and none may be added; ``ready_for_review`` is terminal
 from fastapi import APIRouter, Depends
 
 from app.api.case_service import CaseService
-from app.api.schemas import HealthDetailsResponse
+from app.api.schemas import DemoScenario, HealthDetailsResponse
 from app.api_dependencies import (
     get_case_service,
     get_provider_mode,
@@ -33,6 +33,72 @@ router = APIRouter(prefix="/api")
 
 def _errors(*codes: int) -> dict[int | str, dict]:
     return {code: {"model": ApiError} for code in codes}
+
+
+_DEMO_SCENARIOS: list[DemoScenario] = [
+    DemoScenario(
+        scenario_id="lumbar-mri-gap",
+        fixture_id="lumbar_mri_prior_auth",
+        title="Lumbar MRI — Conservative Therapy Gap",
+        patient_display="Jordan Rivera, 47F",
+        visit_summary="Lumbar radiculopathy · 8 weeks of symptoms",
+        requested_service="MRI lumbar spine w/o contrast (CPT 72148)",
+        payer="Meridian Health Plans (fictional)",
+        policy_id="MHP-IMG-2201",
+        expected_outcome="gap",
+        expected_outcome_label="1 Gap — Needs Clarification",
+        risk_level="medium",
+        description=(
+            "6 of 7 criteria met from chart evidence. LM-3 (conservative therapy "
+            "completion) requires clinician clarification — PT referral is present but "
+            "completion and outcome are not documented."
+        ),
+        is_real_data=False,
+    ),
+    DemoScenario(
+        scenario_id="abridge-lbp-depression",
+        fixture_id="abridge:1ba8eeb9-bc93-7129-4390-0d2ddd560616",
+        title="Chronic LBP + Depression Screen",
+        patient_display="Male patient, 27",
+        visit_summary="Chronic low back pain · General exam · Positive depression screen",
+        requested_service="MRI lumbar spine w/o contrast (CPT 72148)",
+        payer="Meridian Health Plans (fictional)",
+        policy_id="MHP-IMG-2201",
+        expected_outcome="high_risk",
+        expected_outcome_label="High Denial Risk",
+        risk_level="high",
+        description=(
+            "Real Abridge AI encounter. Younger patient with chronic LBP — "
+            "conservative therapy completion, neurological exam findings, and "
+            "functional limitation may be insufficiently documented for approval."
+        ),
+        is_real_data=True,
+    ),
+    DemoScenario(
+        scenario_id="abridge-htn-lbp",
+        fixture_id="abridge:6d4fd363-1ddb-74f8-516f-2fdc861cb736",
+        title="Hypertension Initiation + Chronic LBP",
+        patient_display="Male patient, 36",
+        visit_summary="Hypertension treatment start · Chronic low back pain co-presentation",
+        requested_service="MRI lumbar spine w/o contrast (CPT 72148)",
+        payer="Meridian Health Plans (fictional)",
+        policy_id="MHP-IMG-2201",
+        expected_outcome="high_risk",
+        expected_outcome_label="High Denial Risk",
+        risk_level="high",
+        description=(
+            "Real Abridge AI encounter. Primary focus is hypertension management; "
+            "LBP is a secondary complaint. Neurological workup and functional "
+            "limitation documentation may be insufficient for imaging approval."
+        ),
+        is_real_data=True,
+    ),
+]
+
+
+@router.get("/scenarios", response_model=list[DemoScenario], tags=["demo"])
+def list_scenarios() -> list[DemoScenario]:
+    return _DEMO_SCENARIOS
 
 
 @router.get("/health", response_model=HealthDetailsResponse, tags=["system"])

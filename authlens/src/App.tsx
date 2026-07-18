@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import './index.css';
 import './App.css';
 
@@ -14,12 +14,12 @@ import PacketStatusPanel  from './components/PacketStatusPanel';
 import SourceDrawer       from './components/SourceDrawer';
 
 import {
-  getDemoCase,
   runAnalysis,
   submitClarification,
   generatePacket,
   verifyPacket,
   draftForm,
+  getDemoCase,
   hasRunAnalysis as apiHasRun,
   hasClarificationRecorded,
   openQuestion,
@@ -41,22 +41,19 @@ export default function App() {
   const [centerTab,      setCenterTab]      = useState<CenterTab>('evidence');
   const [showFormDrawer, setShowFormDrawer] = useState(false);
 
+  // Auto-load the single demo case on mount
+  useEffect(() => {
+    getDemoCase().then((c) => {
+      setLiveCase(c);
+      setCaseId(c.case_id);
+    }).catch(() => {
+      // Backend unavailable — run in mock-only mode (caseId stays null)
+    });
+  }, []);
+
   // Derived booleans from live case
   const hasRunAnalysis   = liveCase ? apiHasRun(liveCase)             : false;
   const hasClarification = liveCase ? hasClarificationRecorded(liveCase) : false;
-
-  // Load demo case on mount so we have a caseId ready
-  useEffect(() => {
-    getDemoCase()
-      .then((c) => {
-        setLiveCase(c);
-        setCaseId(c.case_id);
-      })
-      .catch((err) => {
-        console.warn('Backend unavailable — running in offline demo mode:', err.message);
-        // Offline fallback: set caseId to null; components fall back to mock constants
-      });
-  }, []);
 
   const handleCheckReadiness = useCallback(async () => {
     if (!caseId) {
