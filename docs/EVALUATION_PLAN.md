@@ -6,7 +6,7 @@ Three layers: frozen contract tests (already running), per-component tests
 
 ## Layer 1 — contract tests (frozen, run on every change)
 
-`cd backend && uv run pytest tests/contracts` — 51 tests covering:
+`cd backend && uv run pytest tests/contracts` — 57 tests covering:
 
 - Every `contracts/examples/*.json` validates against its Pydantic model.
 - Evidence spans quote their sources verbatim.
@@ -17,6 +17,10 @@ Three layers: frozen contract tests (already running), per-component tests
 - The fixture stays synthetic-labeled and preserves the LM-3 gap (the note
   must never document completed therapy).
 - All contract/port modules import.
+- The official Abridge dataset (`synthetic-ambient-fhir-25/`) stays intact
+  (25 records, jsonl/json/summary agree) and maps into the intake contracts
+  per the loader spec (`test_abridge_dataset.py` — authoritative over Agent
+  A's loader; see ABRIDGE_DATASET.md).
 
 ## Layer 2 — component tests (per parallel agent)
 

@@ -45,7 +45,7 @@ synthetic-ambient-fhir-25/  Official Abridge synthetic dataset (READ-ONLY — ne
 ```bash
 cd backend
 uv sync
-uv run pytest tests/contracts   # 51 contract & safety tests
+uv run pytest tests/contracts   # 57 contract, safety & dataset tests
 ```
 
 The API server (`app/main.py`) arrives in the parallel build phase — see

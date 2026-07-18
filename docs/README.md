@@ -24,6 +24,7 @@ never submits anything.
 | 9 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Build phases and per-agent task lists |
 | 10 | [EVALUATION_PLAN.md](EVALUATION_PLAN.md) | How we check correctness, grounding, and safety |
 | 11 | [DEPENDENCY_POLICY.md](DEPENDENCY_POLICY.md) | How to request a new dependency (never edit pyproject.toml directly) |
+| 12 | [ABRIDGE_DATASET.md](ABRIDGE_DATASET.md) | Official Abridge dataset: verified structure, loader spec, usage plan |
 
 ## Decision records
 
