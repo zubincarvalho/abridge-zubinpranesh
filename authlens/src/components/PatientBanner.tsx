@@ -5,55 +5,95 @@ type Props = {
   hasClarification: boolean;
 };
 
-export default function PatientBanner({ hasRunAnalysis, hasClarification }: Props) {
-  const authLensStatus = !hasRunAnalysis
-    ? { label: 'Not Analyzed', cls: 'chip-gray' }
-    : hasClarification
-    ? { label: 'Ready for Human Review', cls: 'chip-met' }
-    : { label: 'Needs Clarification', cls: 'chip-orange' };
+const ACTIVITY_TABS = [
+  { id: 'chart',   label: 'Chart Review' },
+  { id: 'results', label: 'Results' },
+  { id: 'notes',   label: 'Clinical Notes' },
+  { id: 'orders',  label: 'Orders' },
+  { id: 'pa',      label: 'Prior Auth Assistant', active: true },
+];
 
-  const priorAuthStatus = hasClarification
-    ? { label: 'Ready for Review', cls: 'chip-teal' }
-    : { label: 'Required', cls: 'chip-orange' };
+export default function PatientBanner({ hasRunAnalysis, hasClarification }: Props) {
+  const statusLabel = !hasRunAnalysis
+    ? null
+    : hasClarification
+    ? { text: 'Ready for Review', cls: 'status-chip--ready' }
+    : { text: 'Needs Clarification', cls: 'status-chip--pending' };
 
   return (
-    <header className="patient-banner">
-      <div className="banner-patient">
-        <div className="banner-name">
-          Jordan Rivera
-          <span className="synthetic-badge">SYNTHETIC</span>
+    <header className="patient-header">
+      {/* Epic chrome bar — app-level navigation */}
+      <div className="epic-chrome">
+        <div className="epic-chrome-left">
+          <span className="epic-wordmark">epic</span>
+          <span className="epic-sep">›</span>
+          <span className="epic-breadcrumb">Encounters</span>
+          <span className="epic-sep">›</span>
+          <span className="epic-patient-crumb">Rivera, Jordan</span>
         </div>
-        <div className="banner-meta">
-          <span>Female</span>
-          <span className="sep">·</span>
-          <span>DOB 04/02/1979</span>
-          <span className="sep">·</span>
-          <span>ID pt-demo-001</span>
-        </div>
-        <div className="banner-encounter">
-          <span className="enc-label">Encounter:</span> Clinic visit — chronic low back pain follow-up
-          <span className="sep">·</span>
-          <span className="enc-label">Coverage:</span> Meridian Health Plans (fictional)
+        <div className="epic-chrome-right">
+          <span className="epic-env-tag">SANDBOX</span>
+          <div className="epic-user">
+            <span className="epic-user-avatar">KM</span>
+            <span className="epic-user-label">Morris, Kelsey MD</span>
+          </div>
         </div>
       </div>
 
-      <div className="banner-chips">
-        <div className="banner-chip-group">
-          <span className="chip-label">Visit Status</span>
-          <span className="chip chip-blue">Open Encounter</span>
+      {/* Patient identity + encounter strip */}
+      <div className="patient-strip">
+        <div className="patient-id-row">
+          <span className="patient-name">Rivera, Jordan</span>
+          <span className="patient-dot">·</span>
+          <span className="patient-demo">47F</span>
+          <span className="patient-dot">·</span>
+          <span className="patient-demo">DOB 04/02/1979</span>
+          <span className="patient-dot">·</span>
+          <span className="patient-demo">MRN pt-demo-001</span>
+          <span className="synthetic-badge">SYNTHETIC</span>
+          {statusLabel && (
+            <span className={`patient-status-chip ${statusLabel.cls}`}>
+              AuthLens: {statusLabel.text}
+            </span>
+          )}
         </div>
-        <div className="banner-chip-group">
-          <span className="chip-label">Abridge Note</span>
-          <span className="chip chip-purple">Draft · AI Generated</span>
+        <div className="patient-meta-row">
+          <span className="meta-item">
+            <span className="meta-key">Encounter</span>
+            Clinic Visit — Chronic Low Back Pain
+          </span>
+          <span className="meta-sep">|</span>
+          <span className="meta-item">
+            <span className="meta-key">Provider</span>
+            Morris, Kelsey MD
+          </span>
+          <span className="meta-sep">|</span>
+          <span className="meta-item">
+            <span className="meta-key">Payer</span>
+            Meridian Health Plans (fictional)
+          </span>
+          <span className="meta-sep">|</span>
+          <span className="meta-item enc-status-open">
+            Open Encounter
+          </span>
         </div>
-        <div className="banner-chip-group">
-          <span className="chip-label">AuthLens</span>
-          <span className={`chip ${authLensStatus.cls}`}>{authLensStatus.label}</span>
-        </div>
-        <div className="banner-chip-group">
-          <span className="chip-label">Prior Auth</span>
-          <span className={`chip ${priorAuthStatus.cls}`}>{priorAuthStatus.label}</span>
-        </div>
+      </div>
+
+      {/* Activity tab row — Epic Hyperspace activity selector */}
+      <div className="activity-tab-row" role="tablist" aria-label="Chart activities">
+        {ACTIVITY_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={tab.active ?? false}
+            className={`activity-tab${tab.active ? ' activity-tab--active' : ''}`}
+          >
+            {tab.label}
+            {tab.id === 'pa' && hasRunAnalysis && (
+              <span className={`tab-status-dot${hasClarification ? ' dot--green' : ' dot--amber'}`} />
+            )}
+          </button>
+        ))}
       </div>
     </header>
   );

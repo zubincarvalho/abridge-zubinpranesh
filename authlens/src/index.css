@@ -5,36 +5,57 @@
 }
 
 :root {
-  --brand-blue: #1a6bb5;
-  --brand-blue-light: #2980d6;
-  --brand-teal: #0d8c8c;
-  --brand-teal-light: #e6f7f7;
-  --bg-page: #f0f2f5;
+  /* Epic primary blue — actions, active states, links */
+  --brand-blue: #2360a0;
+  --brand-blue-light: #2e78c4;
+  --brand-teal: #006B6B;
+  --brand-teal-light: #dff0f0;
+
+  /* Page + panel backgrounds */
+  --bg-page: #e4e8ec;
   --bg-panel: #ffffff;
-  --bg-sidebar: #1e2d3d;
-  --bg-sidebar-hover: #2a3f54;
-  --bg-sidebar-active: #163a5f;
-  --border: #d1d9e0;
-  --border-light: #e8ecf0;
-  --text-primary: #1a1f2b;
-  --text-secondary: #4a5568;
-  --text-muted: #718096;
-  --text-sidebar: #c8d6e5;
+  --bg-chrome: #edf0f5;
+
+  /* Epic deep navy — left nav rail + chrome bar */
+  --bg-sidebar: #1a4468;
+  --bg-sidebar-hover: #1f5287;
+  --bg-sidebar-active: #0f3050;
+
+  /* Borders */
+  --border: #c2cedd;
+  --border-light: #d8e2ea;
+
+  /* Text */
+  --text-primary: #18202e;
+  --text-secondary: #38506a;
+  --text-muted: #637f99;
+  --text-sidebar: #b4cde0;
   --text-sidebar-active: #ffffff;
+
+  /* Activity tab */
+  --tab-inactive-text: #567898;
+
+  /* Status — clinical standard (unchanged) */
   --status-met: #15803d;
   --status-met-bg: #dcfce7;
   --status-weak: #92400e;
   --status-weak-bg: #fef3c7;
   --status-missing: #991b1b;
   --status-missing-bg: #fee2e2;
-  --highlight-bg: #fef9c3;
+
+  /* Evidence highlight — Abridge yellow */
+  --highlight-bg: #fef3c7;
   --highlight-border: #f59e0b;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --shadow-sm: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08);
-  --shadow-md: 0 2px 8px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.06);
+
+  /* Border radius — tighter for Epic aesthetic */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.07);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.10);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
 }
 
 html, body, #root {
@@ -51,31 +72,33 @@ button {
   font-family: inherit;
 }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #c1cdd9; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #a0b0c0; }
+::-webkit-scrollbar-thumb { background: #b0c2d2; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #92aabf; }
 
+/* Status chips */
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 2px 7px;
+  border-radius: 10px;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   white-space: nowrap;
 }
-.chip-met { background: var(--status-met-bg); color: var(--status-met); }
-.chip-weak { background: var(--status-weak-bg); color: var(--status-weak); }
+.chip-met     { background: var(--status-met-bg);     color: var(--status-met);     }
+.chip-weak    { background: var(--status-weak-bg);    color: var(--status-weak);    }
 .chip-missing { background: var(--status-missing-bg); color: var(--status-missing); }
-.chip-blue { background: #dbeafe; color: #1e40af; }
-.chip-gray { background: #f1f5f9; color: #475569; }
-.chip-purple { background: #ede9fe; color: #5b21b6; }
-.chip-teal { background: var(--brand-teal-light); color: var(--brand-teal); }
-.chip-orange { background: #ffedd5; color: #9a3412; }
+.chip-blue    { background: #dbeafe; color: #1e40af; }
+.chip-gray    { background: #edf0f4; color: #486070; }
+.chip-purple  { background: #ede9fe; color: #5b21b6; }
+.chip-teal    { background: var(--brand-teal-light); color: var(--brand-teal); }
+.chip-orange  { background: #ffedd5; color: #9a3412; }
 
+/* Panel base */
 .panel {
   background: var(--bg-panel);
   border: 1px solid var(--border);
@@ -87,9 +110,9 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 14px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border-light);
-  background: #fafbfc;
+  background: #f6f8fb;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
@@ -102,39 +125,34 @@ button {
 }
 
 .panel-body {
-  padding: 12px 14px;
+  padding: 10px 12px;
 }
 
+/* Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
+  gap: 5px;
+  padding: 6px 13px;
   border-radius: var(--radius-md);
   font-size: 12px;
   font-weight: 600;
   border: none;
-  transition: all 0.15s ease;
+  transition: all 0.12s ease;
 }
 
-.btn-primary {
-  background: var(--brand-blue);
-  color: #fff;
-}
+.btn-primary  { background: var(--brand-blue);  color: #fff; }
 .btn-primary:hover { background: var(--brand-blue-light); }
 
 .btn-secondary {
-  background: #f1f5f9;
+  background: #f0f4f8;
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
-.btn-secondary:hover { background: #e2e8f0; }
+.btn-secondary:hover { background: #e2eaf0; }
 
-.btn-teal {
-  background: var(--brand-teal);
-  color: #fff;
-}
-.btn-teal:hover { background: #0a7070; }
+.btn-teal  { background: var(--brand-teal); color: #fff; }
+.btn-teal:hover { background: #005858; }
 
 .btn-outline {
   background: transparent;
@@ -143,6 +161,7 @@ button {
 }
 .btn-outline:hover { background: #eff6ff; }
 
+/* FHIR resource tag */
 .fhir-tag {
   display: inline-block;
   font-size: 9px;
@@ -154,12 +173,12 @@ button {
   letter-spacing: 0.04em;
 }
 
+/* Score bar */
 .score-bar-track {
-  height: 6px;
-  background: #e2e8f0;
+  height: 5px;
+  background: #d8e2ea;
   border-radius: 3px;
   overflow: hidden;
-  margin-top: 4px;
 }
 
 .score-bar-fill {
@@ -171,7 +190,7 @@ button {
 .divider {
   height: 1px;
   background: var(--border-light);
-  margin: 10px 0;
+  margin: 8px 0;
 }
 
 .section-label {
@@ -184,19 +203,14 @@ button {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0);    }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease forwards;
-}
-
-.animate-slide-right {
-  animation: slideInRight 0.25s ease forwards;
-}
+.animate-fade-in   { animation: fadeIn       0.22s ease forwards; }
+.animate-slide-right { animation: slideInRight 0.20s ease forwards; }

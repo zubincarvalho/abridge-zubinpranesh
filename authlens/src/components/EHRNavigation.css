@@ -1,70 +1,64 @@
 .ehr-nav {
-  width: 188px;
+  width: 52px;
   flex-shrink: 0;
   background: var(--bg-sidebar);
   display: flex;
   flex-direction: column;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
+  border-right: 1px solid rgba(0,0,0,0.25);
+  z-index: 5;
 }
 
+/* Epic "E" wordmark at top */
 .ehr-nav-logo {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 12px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  justify-content: center;
+  padding: 9px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  flex-shrink: 0;
 }
 
 .ehr-logo-mark {
   width: 28px;
   height: 28px;
-  background: var(--brand-blue);
-  border-radius: 6px;
+  background: #2a6aab;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 16px;
+  font-weight: 900;
+  font-style: italic;
   color: #fff;
-  letter-spacing: -0.5px;
-  flex-shrink: 0;
+  letter-spacing: -1px;
+  user-select: none;
 }
 
-.ehr-logo-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-
-.ehr-nav-section-label {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: rgba(200,214,229,0.5);
-  padding: 14px 12px 4px;
-}
-
+/* Nav item list */
 .ehr-nav-list {
   list-style: none;
-  padding: 4px 0;
+  padding: 5px 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow-y: auto;
 }
 
 .ehr-nav-item {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 8px 12px;
-  cursor: pointer;
+  justify-content: center;
+  width: 52px;
+  height: 42px;
+  background: none;
+  border: none;
   color: var(--text-sidebar);
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 0;
-  transition: background 0.12s ease;
-  position: relative;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
 }
 
 .ehr-nav-item:hover {
@@ -73,75 +67,63 @@
 }
 
 .ehr-nav-item.active {
-  background: var(--bg-sidebar-active);
-  color: var(--text-sidebar-active);
-  font-weight: 600;
-  border-left: 3px solid var(--brand-blue-light);
-  padding-left: 9px;
+  background: rgba(42, 106, 171, 0.28);
+  color: #fff;
+  border-left: 3px solid #6ab0e8;
 }
 
 .nav-icon {
-  font-size: 13px;
-  width: 18px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.nav-label {
-  flex: 1;
-}
-
-.nav-badge {
-  background: var(--brand-blue);
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 8px;
-  min-width: 16px;
-  text-align: center;
-}
-
-.ehr-nav-footer {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  background: rgba(0,0,0,0.15);
-}
-
-.provider-avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: var(--brand-teal);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 700;
   display: flex;
   align-items: center;
   justify-content: center;
+  line-height: 1;
+}
+
+.nav-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #d84040;
+  color: #fff;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 3px;
+  border-radius: 5px;
+  min-width: 14px;
+  text-align: center;
+  line-height: 13px;
+}
+
+.nav-badge--active {
+  background: #5ba4e6;
+}
+
+/* Provider avatar at bottom */
+.ehr-nav-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
   flex-shrink: 0;
 }
 
-.provider-info {
-  overflow: hidden;
-}
-
-.provider-name {
-  font-size: 11px;
-  font-weight: 600;
+.provider-avatar-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #0a6060;
   color: #fff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 10px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
 }
 
-.provider-org {
-  font-size: 10px;
-  color: rgba(200,214,229,0.6);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.provider-avatar-btn:hover {
+  background: #0d7a7a;
 }

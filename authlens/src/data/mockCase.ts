@@ -6,7 +6,8 @@ export type SourceType =
   | "encounter_note"
   | "encounter_transcript"
   | "fhir_resource"
-  | "clinician_clarification";
+  | "clinician_clarification"
+  | "payer_policy";
 export type EvidenceConfidence = "high" | "moderate" | "low";
 export type CaseStatus =
   | "draft"
@@ -88,6 +89,8 @@ export type ReadinessSummary = {
   criteria_met: number;
   criteria_weak: number;
   criteria_missing: number;
+  criteria_conflicting: number;
+  criteria_not_applicable: number;
   overall_denial_risk: DenialRisk;
 };
 
@@ -115,7 +118,7 @@ export type ChartItem = {
   source_id: string;
   category: string;
   display: string;
-  detail: string;
+  detail: string | null;
 };
 
 export type SourceContent = {
@@ -398,7 +401,7 @@ export const ASSESSMENTS: CriterionAssessment[] = [
         source_type: "fhir_resource",
         excerpt: "Naproxen 500 mg twice daily (NSAID)",
         span: null,
-        fhir_path: "Bundle.entry[fhir-med-001].display",
+        fhir_path: "MedicationRequest.medicationCodeableConcept.text",
         confidence: "low",
         note: "A listed prescription is not evidence that treatment was completed or failed.",
       },
@@ -408,7 +411,7 @@ export const ASSESSMENTS: CriterionAssessment[] = [
         source_type: "fhir_resource",
         excerpt: "Referral to physical therapy",
         span: null,
-        fhir_path: "Bundle.entry[fhir-ref-pt-001].display",
+        fhir_path: "ServiceRequest.code.text",
         confidence: "low",
         note: "A referral is not evidence that therapy was completed.",
       },
@@ -431,7 +434,7 @@ export const ASSESSMENTS: CriterionAssessment[] = [
         source_type: "fhir_resource",
         excerpt: "Naproxen 500 mg twice daily (NSAID)",
         span: null,
-        fhir_path: "Bundle.entry[fhir-med-001].display",
+        fhir_path: "MedicationRequest.medicationCodeableConcept.text",
         confidence: "low",
         note: "A listed prescription is not evidence that treatment was completed or failed.",
       },
@@ -441,7 +444,7 @@ export const ASSESSMENTS: CriterionAssessment[] = [
         source_type: "fhir_resource",
         excerpt: "Referral to physical therapy",
         span: null,
-        fhir_path: "Bundle.entry[fhir-ref-pt-001].display",
+        fhir_path: "ServiceRequest.code.text",
         confidence: "low",
         note: "A referral is not evidence that therapy was completed.",
       },
@@ -614,6 +617,8 @@ export const READINESS_INITIAL: ReadinessSummary = {
   criteria_met: 5,
   criteria_weak: 1,
   criteria_missing: 1,
+  criteria_conflicting: 0,
+  criteria_not_applicable: 0,
   overall_denial_risk: "high",
 };
 
@@ -623,6 +628,8 @@ export const READINESS_POST_CLARIFICATION: ReadinessSummary = {
   criteria_met: 6,
   criteria_weak: 1,
   criteria_missing: 0,
+  criteria_conflicting: 0,
+  criteria_not_applicable: 0,
   overall_denial_risk: "medium",
 };
 
@@ -858,37 +865,43 @@ export const CHART_ITEMS: ChartItem[] = [
     source_id: "fhir-cond-001",
     category: "condition",
     display: "Chronic low back pain with radiation to left leg",
-    detail: "Onset approximately 8 weeks ago; suspected lumbar radiculopathy (M54.16)",
+    // ICD-10-CM M54.16 (Radiculopathy, lumbar region); SNOMED 279039007
+    detail: "ICD-10-CM M54.16 · Onset ~8 weeks; suspected lumbar radiculopathy",
   },
   {
     source_id: "fhir-obs-slr-001",
     category: "observation",
     display: "Straight-leg raise: positive on left at 40 degrees",
-    detail: "Exam observation recorded this encounter",
+    // SNOMED 279372000 (Straight leg raising test); Observation.valueCodeableConcept: positive lateralized left
+    detail: "SNOMED 279372000 · Physical exam — positive finding, left at 40°",
   },
   {
     source_id: "fhir-med-001",
     category: "medication",
     display: "Naproxen 500 mg twice daily (NSAID)",
-    detail: "Active medication on the list; start date not documented",
+    // RxNorm 849727 (naproxen 500 MG Oral Tablet); ATC M01AE02
+    detail: "RxNorm 849727 · Active; start date not documented",
   },
   {
     source_id: "fhir-ref-pt-001",
     category: "referral",
     display: "Referral to physical therapy",
-    detail: "Referral order present; completion status not documented",
+    // SNOMED 91251008 (Physical therapy procedure); ServiceRequest.intent = proposal
+    detail: "SNOMED 91251008 · Referral present; completion not documented — key LM-3 gap",
   },
   {
     source_id: "fhir-sr-mri-001",
     category: "service_request",
-    display: "MRI lumbar spine without contrast ordered (CPT 72148)",
-    detail: "Ordered this encounter",
+    display: "MRI lumbar spine without contrast (CPT 72148)",
+    // CPT 72148; SNOMED 241612008; reasons: M54.16 + M54.41
+    detail: "CPT 72148 · SNOMED 241612008 · Indication: M54.16 + M54.41",
   },
   {
     source_id: "fhir-cond-002",
     category: "condition",
     display: "Seasonal allergic rhinitis",
-    detail: "Unrelated active condition (excluded from packet)",
+    // ICD-10-CM J30.1; SNOMED 367498001 — excluded under minimum-necessary PHI
+    detail: "ICD-10-CM J30.1 · Unrelated — excluded from PA packet (phi_category: unrelated_condition)",
   },
 ];
 
@@ -909,44 +922,158 @@ export const SOURCE_LOOKUP: Record<string, SourceContent> = {
   },
   "fhir-cond-001": {
     source_id: "fhir-cond-001",
-    title: "FHIR Condition — Chronic low back pain with radiation to left leg",
-    content:
-      "resourceType: Condition\ndisplay: Chronic low back pain with radiation to left leg\ndetail: Onset approximately 8 weeks ago; suspected lumbar radiculopathy (M54.16)\nfhir_path: Bundle.entry[fhir-cond-001].display",
+    title: "FHIR R4 Condition — Chronic low back pain with radiculopathy",
+    content: `{
+  "resourceType": "Condition",
+  "id": "fhir-cond-001",
+  "clinicalStatus": {
+    "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+  },
+  "verificationStatus": {
+    "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-ver-status", "code": "provisional"}]
+  },
+  "code": {
+    "coding": [
+      {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "M54.16", "display": "Radiculopathy, lumbar region"},
+      {"system": "http://snomed.info/sct", "code": "279039007", "display": "Low back pain (finding)"}
+    ],
+    "text": "Chronic low back pain with radiation to left leg"
+  },
+  "subject": {"reference": "Patient/pt-demo-001"},
+  "onsetString": "Approximately 8 weeks prior to encounter",
+  "note": [{"text": "Suspected lumbar radiculopathy. Pain radiates to left leg, worse with sitting and bending."}]
+}`,
     source_type: "fhir_resource",
   },
   "fhir-obs-slr-001": {
     source_id: "fhir-obs-slr-001",
-    title: "FHIR Observation — Straight-leg raise",
-    content:
-      "resourceType: Observation\ndisplay: Straight-leg raise: positive on left at 40 degrees\ndetail: Exam observation recorded this encounter\nfhir_path: Bundle.entry[fhir-obs-slr-001].display",
+    title: "FHIR R4 Observation — Straight-leg raise (positive, left, 40°)",
+    content: `{
+  "resourceType": "Observation",
+  "id": "fhir-obs-slr-001",
+  "status": "final",
+  "category": [
+    {"coding": [{"system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "exam", "display": "Exam"}]}
+  ],
+  "code": {
+    "coding": [{"system": "http://snomed.info/sct", "code": "279372000", "display": "Straight leg raising test (procedure)"}],
+    "text": "Straight-leg raise"
+  },
+  "subject": {"reference": "Patient/pt-demo-001"},
+  "valueCodeableConcept": {
+    "coding": [{"system": "http://snomed.info/sct", "code": "10828004", "display": "Positive (qualifier value)"}],
+    "text": "Positive on left at 40 degrees"
+  },
+  "component": [
+    {
+      "code": {"coding": [{"system": "http://snomed.info/sct", "code": "272741003", "display": "Laterality"}]},
+      "valueCodeableConcept": {"coding": [{"system": "http://snomed.info/sct", "code": "7771000", "display": "Left (qualifier value)"}]}
+    },
+    {
+      "code": {"text": "Angle at onset of pain"},
+      "valueQuantity": {"value": 40, "unit": "deg", "system": "http://unitsofmeasure.org", "code": "deg"}
+    }
+  ]
+}`,
     source_type: "fhir_resource",
   },
   "fhir-med-001": {
     source_id: "fhir-med-001",
-    title: "FHIR MedicationRequest — Naproxen 500 mg",
-    content:
-      "resourceType: MedicationRequest\ndisplay: Naproxen 500 mg twice daily (NSAID)\ndetail: Active medication on the list; start date not documented\nfhir_path: Bundle.entry[fhir-med-001].display",
+    title: "FHIR R4 MedicationRequest — Naproxen 500 mg twice daily",
+    content: `{
+  "resourceType": "MedicationRequest",
+  "id": "fhir-med-001",
+  "status": "active",
+  "intent": "order",
+  "medicationCodeableConcept": {
+    "coding": [
+      {"system": "http://www.nlm.nih.gov/research/umls/rxnorm", "code": "849727", "display": "naproxen 500 MG Oral Tablet"},
+      {"system": "http://www.whocc.no/atc", "code": "M01AE02", "display": "Naproxen"}
+    ],
+    "text": "Naproxen 500 mg twice daily"
+  },
+  "subject": {"reference": "Patient/pt-demo-001"},
+  "dosageInstruction": [{
+    "text": "500 mg orally twice daily",
+    "timing": {"repeat": {"frequency": 2, "period": 1, "periodUnit": "d"}},
+    "doseAndRate": [{"doseQuantity": {"value": 500, "unit": "mg", "system": "http://unitsofmeasure.org", "code": "mg"}}]
+  }],
+  "note": [{"text": "Active medication on list; start date not documented. Present as conservative treatment evidence but does not confirm completion or failure (LM-3)."}]
+}`,
     source_type: "fhir_resource",
   },
   "fhir-ref-pt-001": {
     source_id: "fhir-ref-pt-001",
-    title: "FHIR ServiceRequest — Physical therapy referral",
-    content:
-      "resourceType: ServiceRequest\ndisplay: Referral to physical therapy\ndetail: Referral order present; completion status not documented\nfhir_path: Bundle.entry[fhir-ref-pt-001].display",
+    title: "FHIR R4 ServiceRequest — Physical therapy referral",
+    content: `{
+  "resourceType": "ServiceRequest",
+  "id": "fhir-ref-pt-001",
+  "status": "active",
+  "intent": "proposal",
+  "code": {
+    "coding": [{"system": "http://snomed.info/sct", "code": "91251008", "display": "Physical therapy procedure (regime/therapy)"}],
+    "text": "Referral to physical therapy"
+  },
+  "subject": {"reference": "Patient/pt-demo-001"},
+  "reasonCode": [
+    {"coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "M54.16", "display": "Radiculopathy, lumbar region"}]}
+  ],
+  "note": [{"text": "Referral order present; completion and outcome not documented. This is the critical LM-3 gap — presence of a referral does not satisfy the criterion without documentation of completion and failure."}]
+}`,
     source_type: "fhir_resource",
   },
   "fhir-sr-mri-001": {
     source_id: "fhir-sr-mri-001",
-    title: "FHIR ServiceRequest — MRI lumbar spine",
-    content:
-      "resourceType: ServiceRequest\ndisplay: MRI lumbar spine without contrast ordered (CPT 72148)\ndetail: Ordered this encounter\nfhir_path: Bundle.entry[fhir-sr-mri-001].display",
+    title: "FHIR R4 ServiceRequest — MRI lumbar spine w/o contrast (CPT 72148)",
+    content: `{
+  "resourceType": "ServiceRequest",
+  "id": "fhir-sr-mri-001",
+  "status": "active",
+  "intent": "order",
+  "code": {
+    "coding": [
+      {"system": "http://www.ama-assn.org/go/cpt", "code": "72148", "display": "MRI lumbar spine without contrast"},
+      {"system": "http://snomed.info/sct", "code": "241612008", "display": "MRI of lumbar spine"}
+    ],
+    "text": "MRI lumbar spine without contrast (CPT 72148)"
+  },
+  "subject": {"reference": "Patient/pt-demo-001"},
+  "reasonCode": [
+    {"coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "M54.16", "display": "Radiculopathy, lumbar region"}]},
+    {"coding": [{"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "M54.41", "display": "Lumbago with sciatica, left side"}]}
+  ],
+  "reasonReference": [{"reference": "Condition/fhir-cond-001"}]
+}`,
     source_type: "fhir_resource",
   },
   "fhir-cond-002": {
     source_id: "fhir-cond-002",
-    title: "FHIR Condition — Seasonal allergic rhinitis (EXCLUDED)",
-    content:
-      "resourceType: Condition\ndisplay: Seasonal allergic rhinitis\ndetail: Unrelated active condition — excluded from PA packet under minimum-necessary disclosure.\nphi_category: unrelated_condition",
+    title: "FHIR R4 Condition — Seasonal allergic rhinitis (EXCLUDED from packet)",
+    content: `{
+  "resourceType": "Condition",
+  "id": "fhir-cond-002",
+  "clinicalStatus": {
+    "coding": [{"system": "http://terminology.hl7.org/CodeSystem/condition-clinical", "code": "active"}]
+  },
+  "code": {
+    "coding": [
+      {"system": "http://hl7.org/fhir/sid/icd-10-cm", "code": "J30.1", "display": "Allergic rhinitis due to pollen"},
+      {"system": "http://snomed.info/sct", "code": "367498001", "display": "Seasonal allergic rhinitis (disorder)"}
+    ],
+    "text": "Seasonal allergic rhinitis"
+  },
+  "subject": {"reference": "Patient/pt-demo-001"},
+  "extension": [
+    {
+      "url": "http://authlens.abridge.com/fhir/StructureDefinition/packet-exclusion",
+      "valueBoolean": true
+    },
+    {
+      "url": "http://authlens.abridge.com/fhir/StructureDefinition/exclusion-reason",
+      "valueString": "Unrelated condition — excluded under minimum-necessary PHI disclosure (phi_category: unrelated_condition)"
+    }
+  ]
+}`,
     source_type: "fhir_resource",
   },
   "clar-001": {
