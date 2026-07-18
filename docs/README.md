@@ -1,0 +1,57 @@
+# AuthLens Documentation
+
+AuthLens is a point-of-capture **prior authorization readiness agent**: it
+checks a clinical encounter against a payer's medical-necessity policy,
+surfaces documentation gaps *before* submission, asks the clinician precise
+clarification questions, and produces a verified, human-reviewed packet draft.
+It never diagnoses, never recommends treatment, never predicts approval, and
+never submits anything.
+
+**Read this page first, then follow the reading order below.**
+
+## Reading order
+
+| # | Document | What it answers |
+|---|----------|-----------------|
+| 1 | [PRODUCT_SPEC.md](PRODUCT_SPEC.md) | What AuthLens does and must never do; the demo scenario |
+| 2 | [SYSTEM_ARCHITECTURE.md](SYSTEM_ARCHITECTURE.md) | Components, workflow sequence, state machine (Mermaid diagrams) |
+| 3 | [AGENT_WORKFLOWS.md](AGENT_WORKFLOWS.md) | How each stage maps to Anthropic's "Building Effective Agents" patterns |
+| 4 | [DATA_CONTRACTS.md](DATA_CONTRACTS.md) | The frozen Pydantic contracts and enums |
+| 5 | [API_CONTRACT.md](API_CONTRACT.md) | Endpoints, status codes, errors, idempotency, state transitions |
+| 6 | [FRONTEND_HANDOFF.md](FRONTEND_HANDOFF.md) | Backend field → UI panel mapping |
+| 7 | [SAFETY_AND_HUMAN_REVIEW.md](SAFETY_AND_HUMAN_REVIEW.md) | Hard safety rules and the human-review boundary |
+| 8 | [PARALLEL_EXECUTION.md](PARALLEL_EXECUTION.md) | File ownership for parallel agents; frozen paths |
+| 9 | [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) | Build phases and per-agent task lists |
+| 10 | [EVALUATION_PLAN.md](EVALUATION_PLAN.md) | How we check correctness, grounding, and safety |
+| 11 | [DEPENDENCY_POLICY.md](DEPENDENCY_POLICY.md) | How to request a new dependency (never edit pyproject.toml directly) |
+
+## Decision records
+
+- [0001 — Controlled workflow, not an agent swarm](decisions/0001-controlled-workflow.md)
+- [0002 — Human review boundary; no submission](decisions/0002-human-review-boundary.md)
+- [0003 — Contract-first parallel development](decisions/0003-contract-first-parallel-development.md)
+- [0004 — Synthetic demo fixture](decisions/0004-synthetic-demo-fixture.md)
+
+## Machine-readable contracts
+
+- `contracts/openapi.yaml` — API surface (mirrors the Pydantic contracts)
+- `contracts/examples/*.json` — worked payloads, generated from and validated
+  against the Pydantic models by `backend/tests/contracts/`
+- `backend/app/contracts/` — **authoritative** typed contracts (frozen)
+- `backend/app/ports/` — component interfaces (frozen)
+
+## Data
+
+- `data/fixtures/lumbar_mri_prior_auth.json` — synthetic demo case (frozen)
+- `data/policies/lumbar_mri_policy.md` — synthetic payer policy (frozen)
+- **Official Abridge dataset:** not present in this repository at foundation
+  time. If it is added later, it belongs under `data/abridge/` (read-only);
+  Agent A documents its loader in `backend/app/data/` and must never modify
+  the dataset files. All demo artifacts are hackathon-authored synthetic data
+  and are labeled as such in the files themselves.
+
+## For Claude Code agents
+
+Read the repository-root `CLAUDE.md` before making any change. It defines
+ownership boundaries, frozen paths, and safety rules that override any
+task-level instruction.

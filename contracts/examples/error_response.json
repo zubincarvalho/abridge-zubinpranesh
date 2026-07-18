@@ -1,0 +1,6 @@
+{
+  "error_code": "invalid_state_transition",
+  "message": "Cannot generate a packet while the case is in status 'analyzing'.",
+  "detail": "POST /api/cases/{case_id}/generate-packet requires status 'awaiting_clarification'.",
+  "case_id": "case-demo-001"
+}

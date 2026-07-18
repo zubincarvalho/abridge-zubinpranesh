@@ -1,0 +1,102 @@
+{
+  "case_id": "case-demo-001",
+  "status": "intake_ready",
+  "created_at": "2026-07-18T16:00:00Z",
+  "updated_at": "2026-07-18T16:00:30Z",
+  "synthetic": true,
+  "patient": {
+    "patient_id": "pt-demo-001",
+    "display_name": "Jordan Rivera (synthetic)",
+    "birth_date": "1979-04-02",
+    "sex": "female",
+    "chart_items": [
+      {
+        "source_id": "fhir-cond-001",
+        "category": "condition",
+        "display": "Chronic low back pain with radiation to left leg",
+        "detail": "Onset approximately 8 weeks ago; suspected lumbar radiculopathy (M54.16)"
+      },
+      {
+        "source_id": "fhir-obs-slr-001",
+        "category": "observation",
+        "display": "Straight-leg raise: positive on left at 40 degrees",
+        "detail": "Exam observation recorded this encounter"
+      },
+      {
+        "source_id": "fhir-med-001",
+        "category": "medication",
+        "display": "Naproxen 500 mg twice daily (NSAID)",
+        "detail": "Active medication on the list; start date not documented"
+      },
+      {
+        "source_id": "fhir-ref-pt-001",
+        "category": "referral",
+        "display": "Referral to physical therapy",
+        "detail": "Referral order present; completion status not documented"
+      },
+      {
+        "source_id": "fhir-sr-mri-001",
+        "category": "service_request",
+        "display": "MRI lumbar spine without contrast ordered (CPT 72148)",
+        "detail": "Ordered this encounter"
+      },
+      {
+        "source_id": "fhir-cond-002",
+        "category": "condition",
+        "display": "Seasonal allergic rhinitis",
+        "detail": "Unrelated active condition (should be excluded from the packet)"
+      }
+    ]
+  },
+  "requested_service": {
+    "service_name": "MRI lumbar spine without contrast",
+    "code": "72148",
+    "code_system": "CPT",
+    "modality": "MRI",
+    "body_site": "lumbar spine"
+  },
+  "clinical_indication": "Chronic low back pain with radicular symptoms; suspected lumbar radiculopathy",
+  "indication_codes": [
+    "M54.16",
+    "M54.41"
+  ],
+  "encounter_note": {
+    "source_id": "note-001",
+    "title": "Clinic note - low back pain follow-up (synthetic, Abridge-style)",
+    "text": "SUBJECTIVE: Jordan Rivera is a 47-year-old presenting with low back pain radiating down the left leg, ongoing for approximately 8 weeks. Pain is worse with prolonged sitting and bending. She reports difficulty sitting through a full workday and interrupted sleep due to pain. She denies recent trauma, fever, unexplained weight loss, saddle anesthesia, and bowel or bladder dysfunction. No history of cancer.\n\nOBJECTIVE: Straight-leg raise is positive on the left at 40 degrees. Sensation decreased over the left lateral calf. Strength 5/5 throughout. Reflexes symmetric.\n\nASSESSMENT: Suspected lumbar radiculopathy (M54.16).\n\nPLAN: Naproxen 500 mg twice daily is listed on the medication list. Referral to physical therapy is in place. MRI lumbar spine without contrast ordered to evaluate for nerve root compression and to assess candidacy for epidural steroid injection or surgical referral if conservative measures fail. Return in 4 weeks or sooner if red-flag symptoms develop."
+  },
+  "encounter_transcript": {
+    "source_id": "transcript-001",
+    "text": "Clinician: How long has the pain been going on now? Patient: It's been about two months, and it shoots down my left leg. Clinician: Any numbness around the groin, trouble with bladder or bowels, fevers, weight loss? Patient: No, nothing like that. Clinician: Okay. Let's get an MRI of your lower back to see what's going on with that nerve."
+  },
+  "policy": {
+    "policy_id": "MHP-IMG-2201",
+    "payer_name": "Meridian Health Plans (fictional)",
+    "policy_title": "Medical Necessity Policy: Lumbar Spine MRI",
+    "service_description": "MRI lumbar spine without contrast (CPT 72148)",
+    "source_document": "data/policies/lumbar_mri_policy.md",
+    "synthetic": true
+  },
+  "criteria": [],
+  "assessments": [],
+  "clarification_questions": [],
+  "clarifications": [],
+  "readiness_history": [],
+  "disclosure_decisions": [],
+  "packet": null,
+  "verification": null,
+  "form_draft": null,
+  "events": [
+    {
+      "event_id": "evt-001",
+      "case_id": "case-demo-001",
+      "sequence": 1,
+      "stage": "intake",
+      "status": "completed",
+      "title": "Intake complete: note, transcript, chart, requested service, and payer policy loaded",
+      "detail": "Synthetic demo fixture 'lumbar_mri_prior_auth' loaded.",
+      "related_ids": [],
+      "occurred_at": "2026-07-18T16:00:30Z"
+    }
+  ]
+}

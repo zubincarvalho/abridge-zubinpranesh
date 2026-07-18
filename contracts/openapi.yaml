@@ -1,0 +1,732 @@
+openapi: 3.0.3
+info:
+  title: AuthLens API
+  version: 0.1.0
+  description: |
+    Point-of-capture prior authorization readiness API.
+
+    **Authoritative schemas** live in `backend/app/contracts/` (Pydantic v2);
+    this document mirrors them for frontend consumption. Worked example
+    payloads are in `contracts/examples/`.
+
+    Global rules:
+    - Every mutating case endpoint returns the **full `AuthLensCase`** so the
+      frontend renders all panels from one response and never reconstructs
+      clinical logic.
+    - Every non-2xx response body is an `ApiError`.
+    - Case state transitions follow the fixed machine below; an operation
+      called in the wrong state returns `409` with
+      `error_code: invalid_state_transition`.
+    - There is **no submitted state and no submission endpoint**. The
+      terminal state is `ready_for_review`.
+
+    State machine:
+    ```
+    draft -> intake_ready -> analyzing -> awaiting_clarification
+    awaiting_clarification -> reanalyzing -> awaiting_clarification
+    awaiting_clarification -> packet_drafted -> (verified | verification_failed)
+    verification_failed -> packet_drafted
+    verified -> ready_for_review   (terminal)
+    ```
+servers:
+  - url: http://localhost:8000
+tags:
+  - name: system
+  - name: cases
+  - name: workflow
+  - name: demo
+
+paths:
+  /api/health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Liveness probe
+      description: Always safe; no side effects. Idempotent.
+      responses:
+        "200":
+          description: Service is up.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/HealthResponse" }
+
+  /api/demo-case:
+    get:
+      tags: [demo]
+      operationId: getDemoCase
+      summary: Get the seeded lumbar-MRI demo case
+      description: |
+        Returns the canonical demo case (created at startup from the synthetic
+        fixture `data/fixtures/lumbar_mri_prior_auth.json`) in its current
+        state. Idempotent read. Example: `examples/demo_case.json`.
+      responses:
+        "200":
+          description: The demo case.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/cases:
+    post:
+      tags: [cases]
+      operationId: createCase
+      summary: Create a case from a synthetic fixture
+      description: |
+        Creates a new case in status `intake_ready` from the named fixture.
+        Not idempotent: each call creates a new case with a new `case_id`.
+        Example response: `examples/case_state_initial.json`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCaseRequest" }
+      responses:
+        "201":
+          description: Case created (status `intake_ready`).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "422": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}:
+    get:
+      tags: [cases]
+      operationId: getCase
+      summary: Get full case state
+      description: Idempotent read; the single source the frontend renders from.
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      responses:
+        "200":
+          description: Current case state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/run:
+    post:
+      tags: [workflow]
+      operationId: runAnalysis
+      summary: Run the analysis pipeline
+      description: |
+        Requires status `intake_ready`. Transition:
+        `intake_ready -> analyzing -> awaiting_clarification`.
+        Runs policy parsing, parallel evidence retrieval, evidence mapping,
+        gap detection, clarification generation, and the initial readiness
+        snapshot. Not idempotent; calling twice returns `409`.
+        Example response: `examples/case_state_awaiting_clarification.json`.
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      responses:
+        "200":
+          description: Analysis complete; case is `awaiting_clarification`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/clarifications:
+    post:
+      tags: [workflow]
+      operationId: submitClarification
+      summary: Submit a clinician clarification and re-evaluate
+      description: |
+        Requires status `awaiting_clarification` and an open `question_id`.
+        Transition: `awaiting_clarification -> reanalyzing -> awaiting_clarification`.
+        The response is recorded verbatim as a new evidence source, affected
+        criteria are re-assessed, and a new readiness snapshot is appended.
+        Answering an already-answered question returns `409`
+        (`error_code: question_already_answered`).
+        Example request body: `examples/clarification_request.json`.
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ClarificationSubmission" }
+      responses:
+        "200":
+          description: Re-evaluation complete.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+        "422": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/generate-packet:
+    post:
+      tags: [workflow]
+      operationId: generatePacket
+      summary: Run disclosure review and generate the packet draft
+      description: |
+        Requires status `awaiting_clarification` (the clinician chooses to
+        proceed; open questions may remain and are surfaced in the packet's
+        readiness context). Transition: `awaiting_clarification -> packet_drafted`.
+        Only content with an INCLUDE disclosure decision enters the packet.
+        Does not require prior verification (verification comes next).
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      responses:
+        "200":
+          description: Packet drafted; disclosure decisions populated.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/verify:
+    post:
+      tags: [workflow]
+      operationId: verifyPacket
+      summary: Verify every packet claim
+      description: |
+        Requires status `packet_drafted`. Transition:
+        `packet_drafted -> verified` (passed) or
+        `packet_drafted -> verification_failed` (any blocking issue).
+        From `verification_failed`, call `generate-packet` again to
+        regenerate and return to `packet_drafted`.
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      responses:
+        "200":
+          description: Verification finished; see `verification.passed`.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/form-draft:
+    post:
+      tags: [workflow]
+      operationId: draftForm
+      summary: Populate the mock payer form from the verified packet
+      description: |
+        **Requires prior verification**: status must be `verified` with a
+        passing `VerificationResult`; otherwise `409`
+        (`error_code: packet_not_verified`). Transition:
+        `verified -> ready_for_review` (terminal). The form drafter consumes
+        the verified packet object only — never free-form clinical text.
+        Example response: `examples/case_state_ready_for_review.json`.
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      responses:
+        "200":
+          description: Form drafted; case is `ready_for_review` (terminal).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthLensCase" }
+        "404": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/events:
+    get:
+      tags: [cases]
+      operationId: listEvents
+      summary: Agent timeline events
+      description: Idempotent read; ordered by `sequence`. Also embedded on the case as `events`.
+      parameters: [{ $ref: "#/components/parameters/CaseId" }]
+      responses:
+        "200":
+          description: Timeline events for the case.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/AgentEvent" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/cases/{case_id}/evidence/{source_id}:
+    get:
+      tags: [cases]
+      operationId: getEvidenceSource
+      summary: Resolve a citation source for the evidence drawer
+      description: |
+        Idempotent read. Returns the full content of the cited source
+        (note, transcript, FHIR item, clarification, or policy) so the
+        frontend can highlight `EvidenceItem.span` offsets inside it.
+        Example: `examples/evidence_source_response.json`.
+      parameters:
+        - { $ref: "#/components/parameters/CaseId" }
+        - name: source_id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: The resolvable source content.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EvidenceSourceResponse" }
+        "404": { $ref: "#/components/responses/Error" }
+
+  /api/demo/reset:
+    post:
+      tags: [demo]
+      operationId: resetDemo
+      summary: Reset the demo to its initial state
+      description: |
+        Deletes all in-memory cases and re-seeds the demo case from the
+        synthetic fixture. Idempotent: repeated calls yield the same seeded
+        state. Never modifies fixture files.
+      responses:
+        "200":
+          description: Demo reset; returns the new demo case id.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DemoResetResponse" }
+
+components:
+  parameters:
+    CaseId:
+      name: case_id
+      in: path
+      required: true
+      schema: { type: string }
+
+  responses:
+    Error:
+      description: Error envelope (uniform for all non-2xx responses).
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ApiError" }
+
+  schemas:
+    CaseStatus:
+      type: string
+      description: Case state machine status. No 'submitted' state exists.
+      enum:
+        - draft
+        - intake_ready
+        - analyzing
+        - awaiting_clarification
+        - reanalyzing
+        - packet_drafted
+        - verification_failed
+        - verified
+        - ready_for_review
+
+    CriterionStatus:
+      type: string
+      enum: [met, weak, missing, conflicting, not_applicable]
+
+    DenialRisk:
+      type: string
+      enum: [low, medium, high]
+
+    EvidenceConfidence:
+      type: string
+      enum: [high, moderate, low]
+
+    SourceType:
+      type: string
+      enum:
+        - encounter_note
+        - encounter_transcript
+        - fhir_resource
+        - clinician_clarification
+        - payer_policy
+
+    DisclosureDecisionType:
+      type: string
+      enum: [include, exclude]
+
+    AgentStage:
+      type: string
+      enum:
+        - intake
+        - policy_parsing
+        - evidence_retrieval
+        - evidence_mapping
+        - gap_detection
+        - clarification
+        - disclosure_review
+        - packet_generation
+        - verification
+        - form_drafting
+        - human_review
+
+    EventStatus:
+      type: string
+      enum: [started, completed, failed, skipped]
+
+    VerificationSeverity:
+      type: string
+      enum: [blocking, warning, info]
+
+    HealthResponse:
+      type: object
+      required: [status, service, version]
+      properties:
+        status: { type: string, enum: [ok] }
+        service: { type: string }
+        version: { type: string }
+
+    CreateCaseRequest:
+      type: object
+      required: [fixture_id]
+      properties:
+        fixture_id:
+          type: string
+          default: lumbar_mri_prior_auth
+          description: Named synthetic fixture to build the case from.
+
+    ClarificationSubmission:
+      type: object
+      required: [question_id, response]
+      properties:
+        question_id: { type: string }
+        response: { type: string, minLength: 1 }
+
+    DemoResetResponse:
+      type: object
+      required: [status, demo_case_id]
+      properties:
+        status: { type: string, enum: [reset] }
+        demo_case_id: { type: string }
+
+    ApiError:
+      type: object
+      required: [error_code, message]
+      properties:
+        error_code:
+          type: string
+          description: >
+            Stable machine-readable code. Known codes: case_not_found,
+            source_not_found, question_not_found, question_already_answered,
+            invalid_state_transition, packet_not_verified, fixture_not_found,
+            internal_error.
+        message: { type: string }
+        detail: { type: string, nullable: true }
+        case_id: { type: string, nullable: true }
+
+    TextSpan:
+      type: object
+      required: [start, end]
+      properties:
+        start: { type: integer, minimum: 0 }
+        end: { type: integer, minimum: 0 }
+
+    EvidenceItem:
+      type: object
+      required: [evidence_id, source_id, source_type, excerpt, confidence]
+      properties:
+        evidence_id: { type: string }
+        source_id: { type: string }
+        source_type: { $ref: "#/components/schemas/SourceType" }
+        excerpt:
+          type: string
+          description: Verbatim quote from the source content.
+        span:
+          allOf: [{ $ref: "#/components/schemas/TextSpan" }]
+          nullable: true
+        fhir_path: { type: string, nullable: true }
+        confidence: { $ref: "#/components/schemas/EvidenceConfidence" }
+        note: { type: string, nullable: true }
+
+    EvidenceSourceResponse:
+      type: object
+      required: [source_id, source_type, label, content]
+      properties:
+        source_id: { type: string }
+        source_type: { $ref: "#/components/schemas/SourceType" }
+        label: { type: string }
+        content: { type: string }
+        fhir_resource_type: { type: string, nullable: true }
+
+    PolicyCriterion:
+      type: object
+      required: [criterion_id, policy_id, label, requirement, category]
+      properties:
+        criterion_id: { type: string }
+        policy_id: { type: string }
+        label: { type: string }
+        requirement: { type: string }
+        category: { type: string }
+        applicability_note: { type: string, nullable: true }
+
+    CriterionAssessment:
+      type: object
+      required: [criterion_id, status, denial_risk, rationale, evidence]
+      properties:
+        criterion_id: { type: string }
+        status: { $ref: "#/components/schemas/CriterionStatus" }
+        denial_risk: { $ref: "#/components/schemas/DenialRisk" }
+        rationale: { type: string }
+        evidence:
+          type: array
+          items: { $ref: "#/components/schemas/EvidenceItem" }
+        clarification_question_id: { type: string, nullable: true }
+
+    ClarificationQuestion:
+      type: object
+      required: [question_id, criterion_ids, question, why_needed, status]
+      properties:
+        question_id: { type: string }
+        criterion_ids:
+          type: array
+          items: { type: string }
+        question: { type: string }
+        why_needed: { type: string }
+        suggested_action: { type: string, nullable: true }
+        status: { type: string, enum: [open, answered] }
+
+    ClinicianClarification:
+      type: object
+      required: [clarification_id, question_id, response, recorded_at]
+      properties:
+        clarification_id: { type: string }
+        question_id: { type: string }
+        response: { type: string }
+        recorded_at: { type: string, format: date-time }
+
+    ReadinessSummary:
+      type: object
+      required:
+        [label, score, criteria_met, criteria_weak, criteria_missing,
+         criteria_conflicting, criteria_not_applicable, overall_denial_risk,
+         computed_at]
+      properties:
+        label: { type: string }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        criteria_met: { type: integer }
+        criteria_weak: { type: integer }
+        criteria_missing: { type: integer }
+        criteria_conflicting: { type: integer }
+        criteria_not_applicable: { type: integer }
+        overall_denial_risk: { $ref: "#/components/schemas/DenialRisk" }
+        computed_at: { type: string, format: date-time }
+
+    DisclosureDecision:
+      type: object
+      required: [decision_id, source_id, item_description, decision, reason]
+      properties:
+        decision_id: { type: string }
+        source_id: { type: string }
+        item_description: { type: string }
+        decision: { $ref: "#/components/schemas/DisclosureDecisionType" }
+        reason: { type: string }
+        phi_category: { type: string, nullable: true }
+
+    PacketClaim:
+      type: object
+      required: [claim_id, text, claim_type, evidence_ids]
+      properties:
+        claim_id: { type: string }
+        text: { type: string }
+        claim_type: { type: string, enum: [clinical, policy] }
+        criterion_id: { type: string, nullable: true }
+        evidence_ids:
+          type: array
+          items: { type: string }
+
+    PacketSection:
+      type: object
+      required: [section_id, title, body, claim_ids]
+      properties:
+        section_id: { type: string }
+        title: { type: string }
+        body: { type: string }
+        claim_ids:
+          type: array
+          items: { type: string }
+
+    PriorAuthorizationPacket:
+      type: object
+      required: [packet_id, case_id, status, sections, claims, generated_at]
+      properties:
+        packet_id: { type: string }
+        case_id: { type: string }
+        status: { type: string, enum: [draft, verified, verification_failed] }
+        sections:
+          type: array
+          items: { $ref: "#/components/schemas/PacketSection" }
+        claims:
+          type: array
+          items: { $ref: "#/components/schemas/PacketClaim" }
+        generated_at: { type: string, format: date-time }
+
+    VerificationIssue:
+      type: object
+      required: [issue_id, severity, description]
+      properties:
+        issue_id: { type: string }
+        severity: { $ref: "#/components/schemas/VerificationSeverity" }
+        claim_id: { type: string, nullable: true }
+        description: { type: string }
+        suggested_resolution: { type: string, nullable: true }
+
+    VerificationResult:
+      type: object
+      required: [verification_id, packet_id, passed, checked_claim_count, issues, verified_at]
+      properties:
+        verification_id: { type: string }
+        packet_id: { type: string }
+        passed: { type: boolean }
+        checked_claim_count: { type: integer }
+        issues:
+          type: array
+          items: { $ref: "#/components/schemas/VerificationIssue" }
+        verified_at: { type: string, format: date-time }
+
+    FormDraftField:
+      type: object
+      required: [field_id, label, value, source_claim_ids]
+      properties:
+        field_id: { type: string }
+        label: { type: string }
+        value: { type: string }
+        source_claim_ids:
+          type: array
+          items: { type: string }
+
+    PriorAuthorizationFormDraft:
+      type: object
+      required: [form_id, case_id, packet_id, payer_form_name, fields, attestation, status, generated_at]
+      properties:
+        form_id: { type: string }
+        case_id: { type: string }
+        packet_id: { type: string }
+        payer_form_name: { type: string }
+        fields:
+          type: array
+          items: { $ref: "#/components/schemas/FormDraftField" }
+        attestation: { type: string }
+        status: { type: string, enum: [ready_for_review] }
+        generated_at: { type: string, format: date-time }
+
+    AgentEvent:
+      type: object
+      required: [event_id, case_id, sequence, stage, status, title, related_ids, occurred_at]
+      properties:
+        event_id: { type: string }
+        case_id: { type: string }
+        sequence: { type: integer, minimum: 0 }
+        stage: { $ref: "#/components/schemas/AgentStage" }
+        status: { $ref: "#/components/schemas/EventStatus" }
+        title: { type: string }
+        detail: { type: string, nullable: true }
+        related_ids:
+          type: array
+          items: { type: string }
+        occurred_at: { type: string, format: date-time }
+
+    ChartItem:
+      type: object
+      required: [source_id, category, display]
+      properties:
+        source_id: { type: string }
+        category:
+          type: string
+          enum: [condition, medication, procedure, referral, observation, service_request, other]
+        display: { type: string }
+        detail: { type: string, nullable: true }
+
+    PatientSummary:
+      type: object
+      required: [patient_id, display_name, birth_date, sex, chart_items]
+      properties:
+        patient_id: { type: string }
+        display_name: { type: string }
+        birth_date: { type: string }
+        sex: { type: string, enum: [female, male, other, unknown] }
+        chart_items:
+          type: array
+          items: { $ref: "#/components/schemas/ChartItem" }
+
+    RequestedService:
+      type: object
+      required: [service_name, code, code_system]
+      properties:
+        service_name: { type: string }
+        code: { type: string }
+        code_system: { type: string }
+        modality: { type: string, nullable: true }
+        body_site: { type: string, nullable: true }
+
+    EncounterNote:
+      type: object
+      required: [source_id, title, text]
+      properties:
+        source_id: { type: string }
+        title: { type: string }
+        text: { type: string }
+
+    EncounterTranscript:
+      type: object
+      required: [source_id, text]
+      properties:
+        source_id: { type: string }
+        text: { type: string }
+
+    PayerPolicy:
+      type: object
+      required: [policy_id, payer_name, policy_title, service_description, source_document, synthetic]
+      properties:
+        policy_id: { type: string }
+        payer_name: { type: string }
+        policy_title: { type: string }
+        service_description: { type: string }
+        source_document: { type: string }
+        synthetic: { type: boolean }
+
+    AuthLensCase:
+      type: object
+      description: >
+        Full case state; authoritative Pydantic model is
+        backend/app/contracts/case.py:AuthLensCase. Worked examples:
+        contracts/examples/case_state_*.json.
+      required:
+        [case_id, status, created_at, updated_at, synthetic, patient,
+         requested_service, clinical_indication, indication_codes,
+         encounter_note, policy, criteria, assessments,
+         clarification_questions, clarifications, readiness_history,
+         disclosure_decisions, events]
+      properties:
+        case_id: { type: string }
+        status: { $ref: "#/components/schemas/CaseStatus" }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        synthetic: { type: boolean }
+        patient: { $ref: "#/components/schemas/PatientSummary" }
+        requested_service: { $ref: "#/components/schemas/RequestedService" }
+        clinical_indication: { type: string }
+        indication_codes:
+          type: array
+          items: { type: string }
+        encounter_note: { $ref: "#/components/schemas/EncounterNote" }
+        encounter_transcript:
+          allOf: [{ $ref: "#/components/schemas/EncounterTranscript" }]
+          nullable: true
+        policy: { $ref: "#/components/schemas/PayerPolicy" }
+        criteria:
+          type: array
+          items: { $ref: "#/components/schemas/PolicyCriterion" }
+        assessments:
+          type: array
+          items: { $ref: "#/components/schemas/CriterionAssessment" }
+        clarification_questions:
+          type: array
+          items: { $ref: "#/components/schemas/ClarificationQuestion" }
+        clarifications:
+          type: array
+          items: { $ref: "#/components/schemas/ClinicianClarification" }
+        readiness_history:
+          type: array
+          description: Ordered snapshots; first = before, last = current.
+          items: { $ref: "#/components/schemas/ReadinessSummary" }
+        disclosure_decisions:
+          type: array
+          items: { $ref: "#/components/schemas/DisclosureDecision" }
+        packet:
+          allOf: [{ $ref: "#/components/schemas/PriorAuthorizationPacket" }]
+          nullable: true
+        verification:
+          allOf: [{ $ref: "#/components/schemas/VerificationResult" }]
+          nullable: true
+        form_draft:
+          allOf: [{ $ref: "#/components/schemas/PriorAuthorizationFormDraft" }]
+          nullable: true
+        events:
+          type: array
+          items: { $ref: "#/components/schemas/AgentEvent" }
