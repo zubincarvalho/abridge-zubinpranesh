@@ -42,13 +42,22 @@ never submits anything.
 
 ## Data
 
-- `data/fixtures/lumbar_mri_prior_auth.json` — synthetic demo case (frozen)
-- `data/policies/lumbar_mri_policy.md` — synthetic payer policy (frozen)
-- **Official Abridge dataset:** not present in this repository at foundation
-  time. If it is added later, it belongs under `data/abridge/` (read-only);
-  Agent A documents its loader in `backend/app/data/` and must never modify
-  the dataset files. All demo artifacts are hackathon-authored synthetic data
-  and are labeled as such in the files themselves.
+- `data/fixtures/lumbar_mri_prior_auth.json` — synthetic demo case (frozen,
+  hackathon-authored)
+- `data/policies/lumbar_mri_policy.md` — synthetic payer policy (frozen,
+  hackathon-authored)
+- **Official Abridge dataset:** `synthetic-ambient-fhir-25/` at the repo
+  root — 25 synthetic encounters, each with an ambient transcript, SOAP-style
+  note, after-visit summary, and FHIR R4 context (`README.md` and
+  `schema.json` inside the directory describe the record shape). It is
+  **read-only for every agent**: do not modify, reformat, or move its files.
+  Agent A owns the loader (`backend/app/data/`), which reads
+  `synthetic-ambient-fhir-25.jsonl` and maps one record's `note` →
+  `EncounterNote`, `transcript` → `EncounterTranscript`, and
+  `patient_context` + `encounter_fhir.related_resources` → `PatientSummary`
+  chart items with stable `source_id`s. The **canonical demo case remains
+  the hand-authored lumbar MRI fixture** (its documentation gap is
+  engineered); the Abridge dataset powers additional intake variety only.
 
 ## For Claude Code agents
 
