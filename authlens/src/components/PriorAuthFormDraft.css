@@ -1,462 +1,253 @@
-.pa-form {
-  width: 100%;
-}
+/* ── Prior Authorization "paper" form ─────────────────────────────────────
+   Styled to read like a real payer PA form so it looks usable in a clinical
+   setting: letterhead, lettered sections, ruled field lines, criteria
+   checklist, and a signature block. */
 
-.pa-form-body {
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.pa-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.pa-section-block {
-  background: #f8fafc;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.pa-section-block--full {
-  grid-column: 1 / -1;
-}
-
-.pa-section-title {
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--brand-blue);
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.pa-field-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.pa-field {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  font-size: 12px;
-}
-
-.pa-field-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-  min-width: 100px;
-  flex-shrink: 0;
-}
-
-.pa-field-value {
-  color: var(--text-secondary);
-  font-size: 12px;
-}
-
-.pa-field-value--bold {
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.pa-diagnosis-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.pa-diagnosis-text {
+.pa-paper {
+  background: #fff;
+  color: #1a1a2e;
+  border: 1px solid #d7d7e0;
+  border-radius: 6px;
+  box-shadow: 0 8px 30px rgba(20, 20, 50, 0.10);
+  max-width: 780px;
+  margin: 0 auto;
   font-size: 13px;
-  font-weight: 600;
-  color: var(--text-primary);
+  line-height: 1.5;
+  overflow: hidden;
+  font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
 }
 
-.pa-icd-tag {
-  background: #e0e7ff;
-  color: #3730a3;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: var(--radius-sm);
-  white-space: nowrap;
-}
-
-.pa-checklist {
+/* Letterhead */
+.pa-letterhead {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 22px 14px;
+  border-bottom: 3px double #2b2b52;
 }
-
-.pa-checklist-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 8px;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-}
-
-.pa-check-complete { background: var(--status-met-bg); }
-.pa-check-needs { background: var(--status-weak-bg); }
-.pa-check-missing { background: var(--status-missing-bg); }
-
-.form-check-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
+.pa-payer {
+  font-size: 17px;
   font-weight: 800;
-  flex-shrink: 0;
+  letter-spacing: 0.01em;
+  color: #14143a;
 }
-
-.check-complete { background: var(--status-met); color: #fff; }
-.check-needs { background: #f59e0b; color: #fff; }
-.check-missing { background: var(--status-missing); color: #fff; }
-
-.pa-check-label {
-  font-weight: 600;
-  flex: 1;
-}
-
-.pa-check-complete .pa-check-label { color: var(--status-met); }
-.pa-check-needs .pa-check-label { color: var(--status-weak); }
-.pa-check-missing .pa-check-label { color: var(--status-missing); }
-
-.pa-check-status-text {
-  font-size: 10px;
-  font-weight: 600;
-  font-style: italic;
-  opacity: 0.75;
-}
-
-.pa-rationale {
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--text-secondary);
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  border-left: 3px solid var(--border);
-  background: #fff;
-}
-
-.pa-rationale--complete {
-  border-left-color: #86efac;
-  background: #f0fdf4;
-  color: #166534;
-}
-
-.pa-rationale--partial {
-  border-left-color: #fcd34d;
-  background: #fffbeb;
-}
-
-.pa-rationale-warning {
-  font-size: 11px;
-  color: #92400e;
-  background: var(--status-weak-bg);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  font-weight: 600;
-}
-
-.pa-evidence-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.pa-evidence-chip {
-  background: #f1f5f9;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 3px 10px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--brand-blue);
-  cursor: pointer;
-  transition: all 0.12s;
-}
-
-.pa-evidence-chip:hover {
-  background: #dbeafe;
-  border-color: #93c5fd;
-}
-
-.pa-disclosure {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: #fff;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: 8px 10px;
-}
-
-.pa-disclosure-row {
-  display: flex;
-  gap: 8px;
-  font-size: 11px;
-  align-items: baseline;
-}
-
-.pa-disclosure-label {
-  font-weight: 700;
-  white-space: nowrap;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.included { color: var(--status-met); }
-.excluded { color: var(--status-missing); }
-
-.pa-disclosure-text {
-  color: var(--text-secondary);
-}
-
-.pa-final-status {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: var(--radius-md);
-  border: 2px solid transparent;
-}
-
-.pa-final-ready {
-  background: #f0fdf4;
-  border-color: #86efac;
-}
-
-.pa-final-pending {
-  background: #fffbeb;
-  border-color: #fde68a;
-}
-
-.pa-final-icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #15803d;
-  color: #fff;
-  font-size: 18px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.pa-final-icon--pending {
-  background: #f59e0b;
-}
-
-.pa-final-content {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.pa-final-title {
+.pa-form-title {
   font-size: 14px;
   font-weight: 700;
+  margin-top: 2px;
 }
-
-.pa-final-ready .pa-final-title { color: #166534; }
-.pa-final-pending .pa-final-title { color: #92400e; }
-
-.pa-final-note {
+.pa-form-sub {
   font-size: 11px;
-  color: var(--text-muted);
+  color: #55556f;
+  margin-top: 2px;
+  font-family: system-ui, sans-serif;
 }
-
-/* New field layout */
-.pa-gap-warning {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 12px;
-  color: #92400e;
-  font-weight: 600;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-}
-
-.pa-fields-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.pa-field-row {
-  display: flex;
-  gap: 12px;
-  padding: 9px 14px;
-  border-bottom: 1px solid var(--border-light);
-  align-items: baseline;
-}
-
-.pa-field-row:last-child {
-  border-bottom: none;
-}
-
-.pa-field-row--missing {
-  background: #fff5f5;
-}
-
-.pa-field-row .pa-field-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  min-width: 200px;
+.pa-letterhead-side {
+  text-align: right;
+  font-family: system-ui, sans-serif;
+  font-size: 10.5px;
+  color: #55556f;
   flex-shrink: 0;
 }
-
-.pa-field-value-row {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  flex: 1;
-}
-
-.pa-field-value {
-  font-size: 12px;
-  color: var(--text-primary);
-  line-height: 1.4;
-}
-
-.pa-field-missing {
-  font-size: 12px;
-  color: var(--status-missing);
-  font-style: italic;
-  font-weight: 600;
-}
-
-.pa-cite-btn {
-  background: none;
-  border: none;
-  color: var(--brand-blue);
-  cursor: pointer;
-  font-size: 11px;
-  padding: 0 2px;
-  opacity: 0.6;
-  transition: opacity 0.12s;
-  flex-shrink: 0;
-}
-
-.pa-cite-btn:hover {
-  opacity: 1;
-}
-
-.pa-lm6-note {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 11px;
-  color: #92400e;
-  display: flex;
-  gap: 6px;
-  align-items: flex-start;
-}
-
-.pa-criteria-summary {
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-}
-
-.pa-cs-title {
-  font-size: 10px;
+.pa-mock-stamp {
+  display: inline-block;
+  border: 2px solid #c0392b;
+  color: #c0392b;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--text-muted);
-  padding: 6px 12px;
-  background: #f8fafc;
-  border-bottom: 1px solid var(--border-light);
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  margin-bottom: 6px;
 }
+.pa-form-no { font-weight: 700; color: #2b2b52; }
 
-.pa-cs-rows {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.pa-cs-row {
+/* Status strip */
+.pa-status-strip {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 8px 4px;
-  border-right: 1px solid var(--border-light);
+  gap: 8px;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 7px 22px;
+}
+.pa-status-strip .pa-status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.pa-status-ready { background: #ecfdf3; color: #15803d; }
+.pa-status-ready .pa-status-dot { background: #16a34a; }
+.pa-status-draft { background: #fffbeb; color: #b45309; }
+.pa-status-draft .pa-status-dot { background: #f59e0b; }
+
+.pa-gap-warning {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: #b45309;
+  background: #fffbeb;
+  border-top: 1px solid #fde68a;
+  border-bottom: 1px solid #fde68a;
+  padding: 8px 22px;
+}
+
+.pa-paper-body { padding: 8px 22px 20px; }
+
+/* Sections */
+.pa-section { margin-top: 16px; }
+.pa-section-head {
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  background: #2b2b52;
+  padding: 4px 10px;
+  border-radius: 3px;
+}
+
+/* Ruled field lines */
+.pa-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 22px;
+  margin-top: 10px;
+}
+.pa-line { padding: 3px 0 4px; border-bottom: 1px dotted #c9c9d6; }
+.pa-line--wide { grid-column: 1 / -1; }
+.pa-line-label {
+  font-family: system-ui, sans-serif;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #7a7a94;
+}
+.pa-line-value { font-size: 13.5px; color: #14143a; min-height: 18px; }
+
+/* Clinical history table */
+.pa-history-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.pa-history-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid #ececf2;
+  vertical-align: top;
+}
+.pa-hist-cat {
+  width: 120px;
+  font-family: system-ui, sans-serif;
   font-size: 10px;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #5b3fd0;
+  white-space: nowrap;
+}
+.pa-hist-display { font-weight: 600; }
+.pa-hist-detail { color: #55556f; }
+.pa-hist-cite { width: 28px; text-align: right; }
+.pa-history-note {
+  font-family: system-ui, sans-serif;
+  font-size: 10.5px;
+  font-style: italic;
+  color: #7a7a94;
+  margin-top: 6px;
+}
+.pa-empty {
+  font-family: system-ui, sans-serif;
+  font-size: 12px;
+  color: #7a7a94;
+  padding: 8px 0;
 }
 
-.pa-cs-row:last-child {
-  border-right: none;
-}
-
-.pa-cs-id {
-  color: var(--text-muted);
-}
-
-.pa-cs-status {
-  text-transform: capitalize;
-}
-
-.pa-cs-met { background: var(--status-met-bg); }
-.pa-cs-met .pa-cs-status { color: var(--status-met); }
-.pa-cs-weak { background: var(--status-weak-bg); }
-.pa-cs-weak .pa-cs-status { color: var(--status-weak); }
-.pa-cs-missing { background: var(--status-missing-bg); }
-.pa-cs-missing .pa-cs-status { color: var(--status-missing); }
-
-.pa-attestation {
+/* Criteria checklist */
+.pa-criteria-list { margin-top: 8px; display: flex; flex-direction: column; }
+.pa-crit {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  padding: 10px 14px;
-  background: #fef3c7;
-  border: 1px solid #fde68a;
-  border-radius: var(--radius-md);
-  font-size: 11px;
-  color: #78350f;
+  padding: 8px 4px;
+  border-bottom: 1px solid #ececf2;
+}
+.pa-crit-box { font-size: 16px; line-height: 1; color: #16a34a; }
+.pa-crit--missing .pa-crit-box,
+.pa-crit--weak .pa-crit-box,
+.pa-crit--conflicting .pa-crit-box { color: #b45309; }
+.pa-crit-main { flex: 1; }
+.pa-crit-top { display: flex; align-items: center; gap: 8px; }
+.pa-crit-id { font-weight: 800; font-size: 12px; color: #14143a; }
+.pa-crit-status {
+  font-family: system-ui, sans-serif;
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.pa-crit-status--met { background: #dcfce7; color: #15803d; }
+.pa-crit-status--weak,
+.pa-crit-status--conflicting { background: #fef9c3; color: #a16207; }
+.pa-crit-status--missing { background: #fee2e2; color: #b91c1c; }
+.pa-crit-status--not_applicable { background: #eef; color: #556; }
+.pa-crit-summary {
+  font-family: system-ui, sans-serif;
+  font-size: 11.5px;
+  color: #44445c;
+  margin-top: 3px;
+  line-height: 1.45;
 }
 
-.pa-attestation-icon {
-  font-size: 14px;
+/* Cite button */
+.pa-cite-btn {
+  border: 1px solid #d7d7e0;
+  background: #fff;
+  color: #5b3fd0;
+  border-radius: 4px;
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
   flex-shrink: 0;
 }
+.pa-cite-btn:hover { border-color: #a78bfa; background: #f5f2ff; }
 
+/* Attestation + signature */
+.pa-section--attest { margin-top: 20px; }
 .pa-attestation-text {
-  line-height: 1.5;
-  font-weight: 500;
+  font-family: system-ui, sans-serif;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #44445c;
+  background: #faf9ff;
+  border: 1px solid #e4e0f7;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin: 10px 0 16px;
+}
+.pa-signature-row { display: flex; gap: 28px; margin-top: 8px; }
+.pa-sign-line { flex: 1; }
+.pa-sign-line--date { max-width: 180px; }
+.pa-sign-rule { display: block; border-bottom: 1.5px solid #2b2b52; height: 26px; }
+.pa-sign-caption {
+  font-family: system-ui, sans-serif;
+  font-size: 10px;
+  color: #7a7a94;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pa-nosubmit {
+  font-family: system-ui, sans-serif;
+  font-size: 10.5px;
+  color: #7a7a94;
+  font-style: italic;
+  margin-top: 14px;
+  border-top: 1px dotted #c9c9d6;
+  padding-top: 10px;
+}
+
+@media print {
+  .pa-paper { box-shadow: none; border: none; max-width: 100%; }
+  .pa-cite-btn { display: none; }
 }

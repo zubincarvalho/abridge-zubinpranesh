@@ -76,6 +76,30 @@
   color: #c5cdd6;
 }
 
+/* Numbered step: order number with the stage emoji as a small badge */
+.agent-step-icon { flex-direction: column; line-height: 1; }
+.agent-step-num {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary, #1a1a2e);
+}
+.agent-step-emoji {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+  font-size: 11px;
+  background: #fff;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.06);
+}
+.agent-step--completed .agent-step-num { color: #15803d; }
+.agent-step--failed .agent-step-num { color: #b91c1c; }
+
 /* Vertical connector line between steps */
 .agent-connector {
   position: absolute;

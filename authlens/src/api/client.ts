@@ -1,6 +1,6 @@
 // AuthLens API client — mirrors Python contracts in app/contracts/
 
-const BASE = 'http://localhost:8000/api';
+const BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api';
 
 // ── Shared types (mirrors contracts) ──────────────────────────────────────
 
@@ -49,6 +49,77 @@ export type ApiPolicyCriterion = {
   label: string;
   requirement: string;
   category: string;
+  applicability_note?: string | null;
+};
+
+export type ApiPayerPolicy = {
+  policy_id: string;
+  payer_name: string;
+  policy_title: string;
+  service_description: string;
+  source_document: string;
+  synthetic: boolean;
+};
+
+export type ApiRequestedService = {
+  service_name: string;
+  code: string;
+  code_system: string;
+  modality: string | null;
+  body_site: string | null;
+};
+
+export type ApiEncounterTranscript = {
+  source_id: string;
+  text: string;
+};
+
+export type ApiDisclosureDecision = {
+  decision_id: string;
+  source_id: string;
+  item_description: string;
+  decision: 'include' | 'exclude';
+  reason: string;
+  phi_category: string | null;
+};
+
+export type ApiPacketClaim = {
+  claim_id: string;
+  text: string;
+  claim_type: 'clinical' | 'policy';
+  criterion_id: string | null;
+  evidence_ids: string[];
+};
+
+export type ApiPacketSection = {
+  section_id: string;
+  title: string;
+  body: string;
+  claim_ids: string[];
+};
+
+export type ApiPacket = {
+  packet_id: string;
+  case_id: string;
+  status: string;
+  sections: ApiPacketSection[];
+  claims: ApiPacketClaim[];
+};
+
+export type ApiVerificationIssue = {
+  issue_id: string;
+  severity: string;
+  claim_id: string | null;
+  description: string;
+  suggested_resolution: string;
+};
+
+export type ApiVerification = {
+  verification_id: string;
+  packet_id: string;
+  passed: boolean;
+  checked_claim_count: number;
+  issues: ApiVerificationIssue[];
 };
 
 export type ApiCriterionAssessment = {
@@ -141,11 +212,19 @@ export type ApiCase = {
     chart_items: ApiChartItem[];
   };
   encounter_note: ApiEncounterNote;
+  encounter_transcript: ApiEncounterTranscript | null;
+  requested_service: ApiRequestedService;
+  clinical_indication: string;
+  indication_codes: string[];
+  policy: ApiPayerPolicy;
   criteria: ApiPolicyCriterion[];
   assessments: ApiCriterionAssessment[];
   clarification_questions: ApiClarificationQuestion[];
   clarifications: ApiClinicianClarification[];
   readiness_history: ApiReadinessSummary[];
+  disclosure_decisions: ApiDisclosureDecision[];
+  packet: ApiPacket | null;
+  verification: ApiVerification | null;
   form_draft: ApiFormDraft | null;
   events: ApiAgentEvent[];
 };
@@ -167,8 +246,9 @@ async function api<T>(method: string, path: string, body?: unknown): Promise<T> 
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: { message: res.statusText } }));
-    throw new Error(err?.error?.message ?? `HTTP ${res.status}`);
+    // Backend error envelope is flat ApiError: {error_code, message, detail?, case_id?}.
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err?.message ?? err?.error?.message ?? `HTTP ${res.status}`);
   }
   return res.json() as Promise<T>;
 }

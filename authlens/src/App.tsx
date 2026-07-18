@@ -210,6 +210,7 @@ export default function App() {
                           onSourceClick={handleSourceClick}
                           assessments={liveCase?.assessments}
                           criteria={liveCase?.criteria}
+                          policy={liveCase?.policy}
                         />
                         <GapResolutionPanel
                           hasClarification={hasClarification}
@@ -226,6 +227,8 @@ export default function App() {
                           onPhraseClick={handleSourceClick}
                           noteText={liveCase?.encounter_note.text}
                           noteSourceId={liveCase?.encounter_note.source_id}
+                          transcriptText={liveCase?.encounter_transcript?.text}
+                          transcriptSourceId={liveCase?.encounter_transcript?.source_id}
                           assessments={liveCase?.assessments}
                           criteria={liveCase?.criteria}
                         />
@@ -293,6 +296,7 @@ export default function App() {
               <PriorAuthFormDraft
                 hasClarification={hasClarification}
                 onSourceClick={handleSourceClick}
+                caseData={liveCase ?? undefined}
                 formDraft={liveCase?.form_draft ?? undefined}
                 assessments={liveCase?.assessments}
               />

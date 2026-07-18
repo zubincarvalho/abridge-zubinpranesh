@@ -237,3 +237,57 @@
   color: var(--text-muted);
   font-style: italic;
 }
+
+/* ── Full ambient documentation (note + transcript) ─────────────────────── */
+.abridge-basis-banner {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary, #445);
+  background: linear-gradient(0deg, rgba(124, 92, 246, 0.06), rgba(124, 92, 246, 0.06)), #fff;
+  border: 1px solid rgba(124, 92, 246, 0.25);
+  border-left: 3px solid #7c5cf6;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.abridge-basis-banner strong { color: #5b3fd0; }
+
+.note-doc-section { margin-bottom: 18px; }
+.note-doc-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border, #e4e4ee);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+.note-doc-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-primary, #1a1a2e);
+  text-transform: uppercase;
+}
+.note-doc-src {
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text-muted, #8a8aa0);
+}
+.note-doc-section--transcript .transcript-body {
+  background: #f7f7fb;
+  border: 1px solid var(--border, #e4e4ee);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+.transcript-turn {
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0 0 8px;
+  color: var(--text-primary, #1a1a2e);
+}
+.transcript-turn:last-child { margin-bottom: 0; }
+.transcript-speaker {
+  font-weight: 700;
+  color: #5b3fd0;
+  margin-right: 2px;
+}
