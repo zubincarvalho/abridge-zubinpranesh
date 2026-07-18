@@ -226,3 +226,28 @@
   font-size: 10px;
   color: var(--text-muted);
 }
+
+.score-summary-row {
+  display: flex;
+  gap: 4px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.score-detail-chip {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+}
+
+.score-met { background: var(--status-met-bg); color: var(--status-met); }
+.score-weak { background: var(--status-weak-bg); color: var(--status-weak); }
+.score-missing { background: var(--status-missing-bg); color: var(--status-missing); }
+
+.criterion-id {
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 0.75;
+  margin-right: 2px;
+}

@@ -128,3 +128,28 @@
   color: #15803d;
   flex-wrap: wrap;
 }
+
+.gap-clarification-note {
+  font-size: 11px;
+  color: #166534;
+  background: rgba(134,239,172,0.2);
+  border-radius: 4px;
+  padding: 5px 9px;
+}
+
+.gap-q-num {
+  font-size: 8px !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 4px !important;
+  padding: 2px 5px !important;
+  font-family: monospace !important;
+  letter-spacing: 0.02em;
+}
+
+.gap-q-why {
+  font-size: 10px;
+  color: #78350f;
+  line-height: 1.5;
+  margin-top: 2px;
+}

@@ -204,3 +204,36 @@
   padding: 2px 6px;
   border-radius: 3px;
 }
+
+.note-highlight-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 0 8px;
+  flex-wrap: wrap;
+}
+
+.legend-label {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 9px;
+}
+
+.legend-item--criteria {
+  background: var(--highlight-bg);
+  border-bottom: 1.5px solid var(--highlight-border);
+  padding: 0 4px;
+  border-radius: 2px;
+}
+
+.legend-sep {
+  color: var(--border);
+}
+
+.legend-hint {
+  color: var(--text-muted);
+  font-style: italic;
+}

@@ -1,76 +1,84 @@
 import './ChartSnapshot.css';
+import { CHART_ITEMS } from '../data/mockCase';
+
+const CATEGORY_LABEL: Record<string, string> = {
+  condition: 'Condition',
+  observation: 'Observation',
+  medication: 'MedRequest',
+  referral: 'ServiceRequest',
+  service_request: 'ServiceRequest',
+};
+
+const CATEGORY_SECTION: Record<string, string> = {
+  condition: 'Problems',
+  observation: 'Exam Findings',
+  medication: 'Medications',
+  referral: 'Orders / Referrals',
+  service_request: 'Orders / Referrals',
+};
+
+const SECTION_ORDER = ['Problems', 'Exam Findings', 'Medications', 'Orders / Referrals'];
 
 export default function ChartSnapshot() {
+  const sections: Record<string, typeof CHART_ITEMS> = {};
+  for (const item of CHART_ITEMS) {
+    const section = CATEGORY_SECTION[item.category] ?? 'Other';
+    if (!sections[section]) sections[section] = [];
+    sections[section].push(item);
+  }
+
   return (
     <aside className="chart-snapshot">
       <div className="panel">
         <div className="panel-header">
           <span className="panel-header-title">Chart Context</span>
-          <span className="chip chip-blue" style={{ fontSize: '9px' }}>Live</span>
+          <span className="chip chip-blue" style={{ fontSize: '9px' }}>FHIR</span>
         </div>
         <div className="cs-body">
 
-          <section className="cs-section">
-            <div className="section-label">Problems</div>
-            <div className="cs-item">
-              <span className="fhir-tag">FHIR: Condition</span>
-              <div className="cs-item-text">Chronic low back pain</div>
-              <div className="cs-item-meta">M54.5 · Active</div>
+          {SECTION_ORDER.filter((s) => sections[s]).map((sectionName, si) => (
+            <div key={sectionName}>
+              {si > 0 && <div className="divider" />}
+              <section className="cs-section">
+                <div className="section-label">{sectionName}</div>
+                {sections[sectionName].map((item) => {
+                  const excluded = item.source_id === 'fhir-cond-002';
+                  const isMriOrder = item.source_id === 'fhir-sr-mri-001';
+                  return (
+                    <div key={item.source_id} className={`cs-item${isMriOrder ? ' cs-item--highlight' : ''}`}>
+                      <span className="fhir-tag">FHIR: {CATEGORY_LABEL[item.category] ?? item.category}</span>
+                      <div className="cs-item-text">
+                        {item.display}
+                        {isMriOrder && <span className="pa-required-tag">PA Required</span>}
+                        {excluded && (
+                          <span className="pa-required-tag" style={{ background: '#fee2e2', color: '#991b1b', borderColor: '#fca5a5' }}>
+                            Excluded
+                          </span>
+                        )}
+                      </div>
+                      <div className="cs-item-meta">
+                        {excluded ? (
+                          <span style={{ color: '#b91c1c', fontSize: '10px' }}>
+                            Excluded — unrelated condition (minimum-necessary disclosure)
+                          </span>
+                        ) : (
+                          <span>{item.detail}</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </section>
             </div>
-            <div className="cs-item">
-              <span className="fhir-tag">FHIR: Condition</span>
-              <div className="cs-item-text">Hypertension</div>
-              <div className="cs-item-meta">I10 · Active</div>
-            </div>
-          </section>
-
-          <div className="divider" />
-
-          <section className="cs-section">
-            <div className="section-label">Medications</div>
-            <div className="cs-item">
-              <span className="fhir-tag">FHIR: MedRequest</span>
-              <div className="cs-item-text">Ibuprofen 600 mg tablet</div>
-              <div className="cs-item-meta">1 tab PO q6h PRN pain · Active</div>
-            </div>
-          </section>
-
-          <div className="divider" />
-
-          <section className="cs-section">
-            <div className="section-label">Orders / Referrals</div>
-            <div className="cs-item cs-item--highlight">
-              <span className="fhir-tag">FHIR: ServiceRequest</span>
-              <div className="cs-item-text">
-                Lumbar Spine MRI w/o contrast
-                <span className="pa-required-tag">PA Required</span>
-              </div>
-              <div className="cs-item-meta">Draft · Routine · Outpatient</div>
-            </div>
-            <div className="cs-item">
-              <span className="fhir-tag">FHIR: ServiceRequest</span>
-              <div className="cs-item-text">Physical therapy referral</div>
-              <div className="cs-item-meta">Pending</div>
-            </div>
-          </section>
-
-          <div className="divider" />
-
-          <section className="cs-section">
-            <div className="section-label">Recent Results</div>
-            <div className="cs-empty">
-              <span className="cs-empty-icon">○</span>
-              No recent lumbar imaging found
-            </div>
-          </section>
+          ))}
 
           <div className="divider" />
 
           <section className="cs-section">
             <div className="section-label">Coverage</div>
             <div className="cs-item">
-              <div className="cs-item-text">BlueCross PPO</div>
-              <div className="cs-item-meta">Member ID: BCBS-902184</div>
+              <div className="cs-item-text">Meridian Health Plans (fictional)</div>
+              <div className="cs-item-meta">Policy MHP-IMG-2201 · Lumbar Spine MRI</div>
             </div>
           </section>
 

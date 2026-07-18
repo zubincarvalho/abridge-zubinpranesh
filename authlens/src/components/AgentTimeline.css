@@ -4,19 +4,27 @@
 
 .agent-timeline-body {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  padding: 12px 16px;
   gap: 0;
-  padding: 14px 16px;
-  overflow-x: auto;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.agent-idle-msg {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .agent-step {
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
   position: relative;
-  flex: 1;
-  min-width: 120px;
+  padding-bottom: 4px;
 }
 
 .agent-step--idle .agent-step-icon {
@@ -28,13 +36,13 @@
 }
 
 .agent-step-icon {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 14px;
   border: 2px solid transparent;
   background: #f1f5f9;
   position: relative;
@@ -48,14 +56,19 @@
   border-color: #86efac;
 }
 
-.icon-warning {
-  background: var(--status-weak-bg);
-  border-color: #fcd34d;
-}
-
-.icon-review {
+.icon-started {
   background: #dbeafe;
   border-color: #93c5fd;
+}
+
+.icon-failed {
+  background: var(--status-missing-bg);
+  border-color: #fca5a5;
+}
+
+.icon-skipped {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .icon-idle {
@@ -63,40 +76,69 @@
   color: #c5cdd6;
 }
 
+/* Vertical connector line between steps */
 .agent-connector {
   position: absolute;
-  top: 17px;
-  left: calc(50% + 18px);
-  right: calc(-50% + 18px);
-  height: 2px;
+  left: 15px;
+  top: 32px;
+  width: 2px;
+  height: calc(100% - 2px);
   background: #e2e8f0;
   z-index: 0;
 }
 
 .connector-active {
-  background: linear-gradient(90deg, #86efac, #93c5fd);
+  background: linear-gradient(180deg, #86efac, #93c5fd);
 }
 
 .agent-step-content {
-  margin-top: 8px;
-  text-align: center;
+  flex: 1;
+  padding-bottom: 12px;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 3px;
 }
 
 .agent-step-label {
-  font-size: 11px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .agent-step-detail {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text-muted);
-  text-align: center;
   line-height: 1.3;
+}
+
+.agent-step-ids {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.agent-id-tag {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+}
+
+.agent-step-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.agent-step-time {
+  font-size: 9px;
+  color: var(--text-muted);
 }
 
 .agent-chip {
@@ -106,7 +148,6 @@
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  margin-top: 2px;
 }
 
 .agent-chip-completed {
@@ -114,12 +155,17 @@
   color: var(--status-met);
 }
 
-.agent-chip-warning {
-  background: var(--status-weak-bg);
-  color: var(--status-weak);
-}
-
-.agent-chip-review {
+.agent-chip-started {
   background: #dbeafe;
   color: #1e40af;
+}
+
+.agent-chip-failed {
+  background: var(--status-missing-bg);
+  color: var(--status-missing);
+}
+
+.agent-chip-skipped {
+  background: #f1f5f9;
+  color: #64748b;
 }

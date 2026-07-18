@@ -19,20 +19,21 @@ export default function PatientBanner({ hasRunAnalysis, hasClarification }: Prop
   return (
     <header className="patient-banner">
       <div className="banner-patient">
-        <div className="banner-name">John Smith</div>
+        <div className="banner-name">
+          Jordan Rivera
+          <span className="synthetic-badge">SYNTHETIC</span>
+        </div>
         <div className="banner-meta">
-          <span>47M</span>
+          <span>Female</span>
           <span className="sep">·</span>
-          <span>DOB 05/12/1978</span>
+          <span>DOB 04/02/1979</span>
           <span className="sep">·</span>
-          <span>MRN 12345678</span>
-          <span className="sep">·</span>
-          <span className="allergy-tag">NKDA</span>
+          <span>ID pt-demo-001</span>
         </div>
         <div className="banner-encounter">
-          <span className="enc-label">Encounter:</span> General exam — chronic low back pain
+          <span className="enc-label">Encounter:</span> Clinic visit — chronic low back pain follow-up
           <span className="sep">·</span>
-          <span className="enc-label">Coverage:</span> BlueCross PPO
+          <span className="enc-label">Coverage:</span> Meridian Health Plans (fictional)
         </div>
       </div>
 

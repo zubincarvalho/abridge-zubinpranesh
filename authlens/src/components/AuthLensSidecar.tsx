@@ -1,22 +1,40 @@
 import './AuthLensSidecar.css';
-import { EVIDENCE_ROWS } from '../data/mockCase';
-import type { SourceDetail } from '../data/mockCase';
+import { ASSESSMENTS, READINESS_INITIAL, READINESS_POST_CLARIFICATION } from '../data/mockCase';
 
 type Props = {
   hasRunAnalysis: boolean;
   hasClarification: boolean;
   onCheckReadiness: () => void;
-  onSourceClick: (source: SourceDetail) => void;
+  onSourceClick: (sourceId: string, excerpt?: string) => void;
 };
 
 const STATUS_ICON: Record<string, string> = { met: '✓', weak: '!', missing: '✕' };
-const STATUS_CLS: Record<string, string> = { met: 'criterion-met', weak: 'criterion-weak', missing: 'criterion-missing' };
+const STATUS_CLS: Record<string, string> = {
+  met: 'criterion-met',
+  weak: 'criterion-weak',
+  missing: 'criterion-missing',
+};
 
-export default function AuthLensSidecar({ hasRunAnalysis, hasClarification, onCheckReadiness, onSourceClick }: Props) {
-  const score = hasClarification ? 94 : hasRunAnalysis ? 58 : 0;
-  const status = hasClarification ? 'Ready for human review' : hasRunAnalysis ? 'Needs clarification' : 'Not analyzed';
-  const statusCls = hasClarification ? 'status-ready' : hasRunAnalysis ? 'status-needs' : 'status-idle';
-  const barColor = score >= 90 ? '#15803d' : score >= 50 ? '#d97706' : '#9ca3af';
+export default function AuthLensSidecar({
+  hasRunAnalysis,
+  hasClarification,
+  onCheckReadiness,
+  onSourceClick,
+}: Props) {
+  const readiness = hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL;
+  const score = hasRunAnalysis ? readiness.score : 0;
+  const status = hasClarification
+    ? 'Ready for human review'
+    : hasRunAnalysis
+    ? 'Needs clarification'
+    : 'Not analyzed';
+  const statusCls = hasClarification
+    ? 'status-ready'
+    : hasRunAnalysis
+    ? 'status-needs'
+    : 'status-idle';
+  const barColor =
+    score >= 90 ? '#15803d' : score >= 70 ? '#d97706' : '#9ca3af';
 
   return (
     <aside className="authlens-sidecar panel">
@@ -33,10 +51,14 @@ export default function AuthLensSidecar({ hasRunAnalysis, hasClarification, onCh
       <div className="authlens-body">
         <div className="authlens-trigger-card">
           <div className="section-label">Triggered by Order</div>
-          <div className="trigger-order">MRI Lumbar Spine w/o contrast</div>
+          <div className="trigger-order">MRI Lumbar Spine w/o contrast (CPT 72148)</div>
           <div className="trigger-meta">
-            <div><span className="section-label">Payer</span> BlueCross PPO</div>
-            <div><span className="section-label">Policy</span> Lumbar Spine MRI Medical Necessity</div>
+            <div>
+              <span className="section-label">Payer</span> Meridian Health Plans (fictional)
+            </div>
+            <div>
+              <span className="section-label">Policy</span> MHP-IMG-2201
+            </div>
           </div>
         </div>
 
@@ -49,7 +71,19 @@ export default function AuthLensSidecar({ hasRunAnalysis, hasClarification, onCh
           </div>
           {hasRunAnalysis && (
             <div className="score-bar-track">
-              <div className="score-bar-fill" style={{ width: `${score}%`, background: barColor }} />
+              <div
+                className="score-bar-fill"
+                style={{ width: `${score}%`, background: barColor }}
+              />
+            </div>
+          )}
+          {hasRunAnalysis && (
+            <div className="score-summary-row">
+              <span className="score-detail-chip score-met">{readiness.criteria_met} met</span>
+              <span className="score-detail-chip score-weak">{readiness.criteria_weak} weak</span>
+              <span className="score-detail-chip score-missing">
+                {readiness.criteria_missing} missing
+              </span>
             </div>
           )}
           <div className={`authlens-status-badge ${statusCls}`}>{status}</div>
@@ -63,17 +97,27 @@ export default function AuthLensSidecar({ hasRunAnalysis, hasClarification, onCh
 
         {hasRunAnalysis && (
           <div className="criteria-list animate-fade-in">
-            <div className="section-label" style={{ marginBottom: '6px' }}>Criteria Checklist</div>
-            {EVIDENCE_ROWS.map((row) => {
-              const s = hasClarification ? row.statusAfter : row.status;
+            <div className="section-label" style={{ marginBottom: '6px' }}>
+              Criteria — 7 of 7 evaluated
+            </div>
+            {ASSESSMENTS.map((a) => {
+              const s = hasClarification ? a.status_after : a.status;
+              const firstEv = a.evidence[0];
               return (
                 <button
-                  key={row.id}
+                  key={a.criterion_id}
                   className={`criterion-item ${STATUS_CLS[s]}`}
-                  onClick={() => onSourceClick(row.sourceDetail)}
+                  onClick={() =>
+                    onSourceClick(
+                      firstEv?.source_id ?? 'note-001',
+                      firstEv?.excerpt
+                    )
+                  }
                 >
                   <span className="criterion-icon">{STATUS_ICON[s]}</span>
-                  <span className="criterion-label">{row.criterion}</span>
+                  <span className="criterion-label">
+                    <span className="criterion-id">{a.criterion_id}</span>{' '}
+                  </span>
                 </button>
               );
             })}
@@ -82,7 +126,7 @@ export default function AuthLensSidecar({ hasRunAnalysis, hasClarification, onCh
 
         {hasRunAnalysis && !hasClarification && (
           <div className="authlens-hint animate-fade-in">
-            <span>⬇</span> See evidence matrix below for details and suggested questions.
+            <span>⬇</span> See evidence matrix below for gaps and suggested questions.
           </div>
         )}
 
@@ -97,8 +141,10 @@ export default function AuthLensSidecar({ hasRunAnalysis, hasClarification, onCh
 
         <div className="authlens-policy-info">
           <div className="section-label">Payer Policy Reference</div>
-          <div className="policy-detail">BlueCross PPO · MRI Spine Policy 2024-L07</div>
-          <div className="policy-criteria-count">5 medical necessity criteria evaluated</div>
+          <div className="policy-detail">
+            Meridian Health Plans (fictional) · MHP-IMG-2201
+          </div>
+          <div className="policy-criteria-count">7 medical necessity criteria evaluated</div>
         </div>
       </div>
     </aside>

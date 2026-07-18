@@ -185,3 +185,14 @@
   color: var(--text-secondary);
   flex: 1;
 }
+
+.idle-synthetic-note {
+  font-size: 10px;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}

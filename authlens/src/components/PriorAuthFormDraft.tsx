@@ -1,168 +1,127 @@
 import './PriorAuthFormDraft.css';
+import {
+  FORM_DRAFT_FIELDS_AFTER,
+  FORM_ATTESTATION,
+  ASSESSMENTS,
+} from '../data/mockCase';
 
 type Props = {
   hasClarification: boolean;
-  onSourceClick: (source: { type: 'note' | 'transcript' | 'fhir' | 'clarification'; title: string; excerpt: string }) => void;
+  onSourceClick: (sourceId: string, excerpt?: string) => void;
 };
 
-type ChecklistItem = { label: string; status: 'complete' | 'needs' | 'missing' };
-
-function StatusIcon({ status }: { status: ChecklistItem['status'] }) {
-  if (status === 'complete') return <span className="form-check-icon check-complete">✓</span>;
-  if (status === 'needs') return <span className="form-check-icon check-needs">!</span>;
-  return <span className="form-check-icon check-missing">✕</span>;
-}
+const LM6_NOTE =
+  'LM-6 (Functional limitation) remains Weak — work and sleep impact documented but not quantified. Clinician may add detail before submission.';
 
 export default function PriorAuthFormDraft({ hasClarification, onSourceClick }: Props) {
-  const checklistBefore: ChecklistItem[] = [
-    { label: 'Diagnosis documented', status: 'complete' },
-    { label: 'Symptoms > 6 weeks', status: 'needs' },
-    { label: 'Conservative therapy failed', status: 'missing' },
-    { label: 'Neurologic findings', status: 'complete' },
-    { label: 'Red flags screened', status: 'needs' },
-  ];
+  const fields = hasClarification
+    ? FORM_DRAFT_FIELDS_AFTER
+    : FORM_DRAFT_FIELDS_AFTER.filter((f) => f.field_id !== 'f-conservative');
 
-  const checklistAfter: ChecklistItem[] = checklistBefore.map((c) => ({ ...c, status: 'complete' as const }));
-  const checklist = hasClarification ? checklistAfter : checklistBefore;
-
-  const rationaleText = hasClarification
-    ? 'Patient has over 8 weeks of low back pain with left-sided radicular symptoms and positive straight-leg raise. Symptoms persisted despite six weeks of physical therapy and NSAID therapy without meaningful improvement. No fever, trauma, cancer history, progressive weakness, or bowel/bladder dysfunction reported. MRI lumbar spine is requested to evaluate possible nerve root compression.'
-    : 'Patient has chronic low back pain with left-sided radicular symptoms and positive straight-leg raise. MRI is requested to evaluate possible nerve root compression. Additional documentation is needed for symptom duration, conservative therapy outcome, and complete red-flag screening.';
-
-  const evidenceChips = [
-    { label: 'Encounter Note / HPI', type: 'note' as const, excerpt: '47-year-old male with low back pain radiating to left leg for several months.' },
-    { label: 'Encounter Note / Exam', type: 'note' as const, excerpt: 'Positive straight-leg raise on the left. Strength grossly intact.' },
-    { label: 'FHIR MedicationRequest', type: 'fhir' as const, excerpt: 'Ibuprofen 600 mg tablet, 1 tab PO q6h PRN pain — Active.' },
-    { label: 'FHIR ServiceRequest', type: 'fhir' as const, excerpt: 'MRI Lumbar Spine without contrast — prior authorization required.' },
-    ...(hasClarification ? [{ label: 'Clinician Clarification', type: 'clarification' as const, excerpt: 'Patient reports over 8 weeks of symptoms. Six weeks of PT and NSAID therapy without improvement. No red flags.' }] : []),
-    { label: 'Disclosure Summary', type: 'note' as const, excerpt: 'Included: diagnosis, symptom duration, conservative therapy, neurologic exam, red-flag screen. Excluded: unrelated hypertension and preventive-care details.' },
-  ];
+  const gapFields = hasClarification
+    ? []
+    : ['f-conservative'];
 
   return (
     <div className="pa-form panel">
       <div className="panel-header">
-        <span className="panel-header-title">Prior Authorization Request Details</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <span className="panel-header-title">Prior Authorization Form Draft</span>
+          <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+            Meridian Health Plans — Advanced Imaging Prior Authorization Request (MOCK)
+          </span>
+        </div>
         <span className={`chip ${hasClarification ? 'chip-met' : 'chip-orange'}`}>
           {hasClarification ? 'Ready for Human Review' : 'Needs Clarification'}
         </span>
       </div>
 
       <div className="pa-form-body">
-        <div className="pa-grid">
-
-          {/* Request block */}
-          <div className="pa-section-block">
-            <div className="pa-section-title">Request</div>
-            <div className="pa-field-grid">
-              <div className="pa-field"><span className="pa-field-label">Requested Service</span><span className="pa-field-value pa-field-value--bold">MRI Lumbar Spine without contrast</span></div>
-              <div className="pa-field"><span className="pa-field-label">Place of Service</span><span className="pa-field-value">Outpatient</span></div>
-              <div className="pa-field"><span className="pa-field-label">Priority</span><span className="pa-field-value">Routine</span></div>
-              <div className="pa-field"><span className="pa-field-label">Ordering Provider</span><span className="pa-field-value">Kelsey Morris, MD</span></div>
-              <div className="pa-field"><span className="pa-field-label">Payer</span><span className="pa-field-value">BlueCross PPO</span></div>
-              <div className="pa-field"><span className="pa-field-label">Policy</span><span className="pa-field-value">Lumbar Spine MRI Medical Necessity · 2024-L07</span></div>
-            </div>
+        {!hasClarification && (
+          <div className="pa-gap-warning">
+            <span>⚠</span> LM-3 (Conservative therapy) is missing. Add clinician clarification to
+            complete the form.
           </div>
+        )}
 
-          {/* Patient block */}
-          <div className="pa-section-block">
-            <div className="pa-section-title">Patient</div>
-            <div className="pa-field-grid">
-              <div className="pa-field"><span className="pa-field-label">Name</span><span className="pa-field-value pa-field-value--bold">John Smith</span></div>
-              <div className="pa-field"><span className="pa-field-label">DOB</span><span className="pa-field-value">05/12/1978</span></div>
-              <div className="pa-field"><span className="pa-field-label">Sex</span><span className="pa-field-value">Male</span></div>
-              <div className="pa-field"><span className="pa-field-label">MRN</span><span className="pa-field-value">12345678</span></div>
-              <div className="pa-field"><span className="pa-field-label">Member ID</span><span className="pa-field-value">BCBS-902184</span></div>
-            </div>
-          </div>
+        <div className="pa-fields-grid">
+          {fields.map((f) => {
+            const assessment = ASSESSMENTS.find((a) =>
+              f.source_claim_ids.length > 0 &&
+              a.evidence_after.some(() => true)
+            );
+            const firstEv = assessment?.evidence_after[0];
 
-          {/* Diagnosis block */}
-          <div className="pa-section-block">
-            <div className="pa-section-title">Diagnosis</div>
-            <div className="pa-diagnosis-row">
-              <div className="pa-diagnosis-text">Chronic low back pain with left-sided radicular symptoms</div>
-              <div className="pa-icd-tag">ICD-10: M54.16</div>
-            </div>
-          </div>
-
-          {/* Medical necessity checklist */}
-          <div className="pa-section-block">
-            <div className="pa-section-title">Medical Necessity Checklist</div>
-            <div className="pa-checklist">
-              {checklist.map((item, i) => (
-                <div key={i} className={`pa-checklist-item pa-check-${item.status}`}>
-                  <StatusIcon status={item.status} />
-                  <span className="pa-check-label">{item.label}</span>
-                  {item.status !== 'complete' && (
-                    <span className="pa-check-status-text">
-                      {item.status === 'needs' ? 'needs clarification' : 'missing'}
-                    </span>
+            return (
+              <div key={f.field_id} className="pa-field-row">
+                <div className="pa-field-label">{f.label}</div>
+                <div className="pa-field-value-row">
+                  <span className="pa-field-value">{f.value}</span>
+                  {f.source_claim_ids.length > 0 && firstEv && (
+                    <button
+                      className="pa-cite-btn"
+                      onClick={() => onSourceClick(firstEv.source_id, firstEv.excerpt)}
+                      title="View source"
+                    >
+                      ↗
+                    </button>
                   )}
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Clinical rationale */}
-          <div className="pa-section-block pa-section-block--full">
-            <div className="pa-section-title">Clinical Rationale</div>
-            <div className={`pa-rationale ${hasClarification ? 'pa-rationale--complete' : 'pa-rationale--partial'}`}>
-              {rationaleText}
-            </div>
-            {!hasClarification && (
-              <div className="pa-rationale-warning">
-                ⚠ Rationale is incomplete. Add clinician clarification to finalize.
               </div>
-            )}
-          </div>
+            );
+          })}
 
-          {/* Supporting evidence */}
-          <div className="pa-section-block pa-section-block--full">
-            <div className="pa-section-title">Supporting Evidence</div>
-            <div className="pa-evidence-chips">
-              {evidenceChips.map((chip, i) => (
-                <button
-                  key={i}
-                  className="pa-evidence-chip"
-                  onClick={() => onSourceClick({ type: chip.type, title: chip.label, excerpt: chip.excerpt })}
-                >
-                  {chip.label} ↗
-                </button>
-              ))}
-            </div>
-            <div className="pa-disclosure">
-              <div className="pa-disclosure-row">
-                <span className="pa-disclosure-label included">Included:</span>
-                <span className="pa-disclosure-text">diagnosis, symptom duration, conservative therapy, neurologic exam, red-flag screen</span>
+          {gapFields.map((fid) => {
+            const orig = FORM_DRAFT_FIELDS_AFTER.find((f) => f.field_id === fid);
+            return orig ? (
+              <div key={fid} className="pa-field-row pa-field-row--missing">
+                <div className="pa-field-label">{orig.label}</div>
+                <div className="pa-field-value-row">
+                  <span className="pa-field-missing">Missing — awaiting clinician clarification</span>
+                </div>
               </div>
-              <div className="pa-disclosure-row">
-                <span className="pa-disclosure-label excluded">Excluded:</span>
-                <span className="pa-disclosure-text">unrelated hypertension history and unrelated preventive-care details</span>
-              </div>
-            </div>
-          </div>
-
+            ) : null;
+          })}
         </div>
 
-        {/* Final status */}
-        <div className={`pa-final-status ${hasClarification ? 'pa-final-ready' : 'pa-final-pending'}`}>
-          {hasClarification ? (
-            <>
-              <div className="pa-final-icon">✓</div>
-              <div className="pa-final-content">
-                <div className="pa-final-title">Ready for Human Review</div>
-                <div className="pa-final-note">AuthLens does not auto-submit prior authorizations.</div>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="pa-final-icon pa-final-icon--pending">!</div>
-              <div className="pa-final-content">
-                <div className="pa-final-title">Needs Clarification Before Submission</div>
-                <div className="pa-final-note">Complete gaps in the evidence matrix to finalize this request.</div>
-              </div>
-            </>
-          )}
+        {hasClarification && (
+          <div className="pa-lm6-note">
+            <span>ℹ</span> {LM6_NOTE}
+          </div>
+        )}
+
+        <div className="pa-criteria-summary">
+          <div className="pa-cs-title">Criteria status at submission</div>
+          <div className="pa-cs-rows">
+            {ASSESSMENTS.map((a) => {
+              const status = hasClarification ? a.status_after : a.status;
+              return (
+                <div key={a.criterion_id} className={`pa-cs-row pa-cs-${status}`}>
+                  <span className="pa-cs-id">{a.criterion_id}</span>
+                  <span className="pa-cs-status">{status}</span>
+                </div>
+              );
+            })}
+          </div>
         </div>
+
+        <div className="pa-attestation">
+          <div className="pa-attestation-icon">⚠</div>
+          <div className="pa-attestation-text">{FORM_ATTESTATION}</div>
+        </div>
+
+        {hasClarification && (
+          <div className="pa-final-status pa-final-ready animate-fade-in">
+            <div className="pa-final-icon">✓</div>
+            <div className="pa-final-content">
+              <div className="pa-final-title">Ready for Human Review</div>
+              <div className="pa-final-note">
+                AuthLens does not auto-submit prior authorizations. A clinician must review and
+                attest before submission to the payer.
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
