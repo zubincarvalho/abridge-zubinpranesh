@@ -1,0 +1,414 @@
+[
+  {
+    "event_id": "case-dee9a3e64e14-ev-0000",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 0,
+    "stage": "intake",
+    "status": "started",
+    "title": "Intake validation started",
+    "detail": null,
+    "related_ids": [
+      "note-001"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.968677Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0001",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 1,
+    "stage": "intake",
+    "status": "completed",
+    "title": "Intake validation completed",
+    "detail": "Required intake inputs are present",
+    "related_ids": [
+      "note-001"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.968777Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0002",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 2,
+    "stage": "policy_parsing",
+    "status": "started",
+    "title": "Policy Agent started",
+    "detail": null,
+    "related_ids": [
+      "MHP-IMG-2201"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.969050Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0003",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 3,
+    "stage": "policy_parsing",
+    "status": "completed",
+    "title": "Policy Agent completed",
+    "detail": "Parsed 7 criteria from policy MHP-IMG-2201",
+    "related_ids": [
+      "LM-1",
+      "LM-2",
+      "LM-3",
+      "LM-4",
+      "LM-5",
+      "LM-6",
+      "LM-7"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.969296Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0004",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 4,
+    "stage": "evidence_retrieval",
+    "status": "started",
+    "title": "Evidence Retrieval started",
+    "detail": null,
+    "related_ids": [
+      "LM-1",
+      "LM-2",
+      "LM-3",
+      "LM-4",
+      "LM-5",
+      "LM-6",
+      "LM-7"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.969312Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0005",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 5,
+    "stage": "evidence_retrieval",
+    "status": "completed",
+    "title": "Evidence Retrieval completed",
+    "detail": "20 candidate(s) across 7 criteria (parallel, bounded at 3 iterations per criterion)",
+    "related_ids": [
+      "LM-1",
+      "LM-2",
+      "LM-3",
+      "LM-4",
+      "LM-5",
+      "LM-6",
+      "LM-7"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.973612Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0006",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 6,
+    "stage": "evidence_mapping",
+    "status": "started",
+    "title": "Evidence Mapper started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.973621Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0007",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 7,
+    "stage": "evidence_mapping",
+    "status": "completed",
+    "title": "Evidence Mapper completed",
+    "detail": "Accepted 20 evidence item(s); excerpts verified verbatim against resolvable sources",
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.973876Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0008",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 8,
+    "stage": "gap_detection",
+    "status": "started",
+    "title": "Gap Detector started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.973882Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0009",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 9,
+    "stage": "gap_detection",
+    "status": "completed",
+    "title": "Gap Detector completed",
+    "detail": "Assessed 7 criteria: 5 met, 1 missing, 1 weak",
+    "related_ids": [
+      "LM-1",
+      "LM-2",
+      "LM-3",
+      "LM-4",
+      "LM-5",
+      "LM-6",
+      "LM-7"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.974105Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0010",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 10,
+    "stage": "gap_detection",
+    "status": "started",
+    "title": "Documentation readiness started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.974123Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0011",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 11,
+    "stage": "gap_detection",
+    "status": "completed",
+    "title": "Documentation readiness completed",
+    "detail": "Readiness 79/100 (initial); documentation completeness only \u2014 not an approval prediction",
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.974202Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0012",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 12,
+    "stage": "clarification",
+    "status": "started",
+    "title": "Clinician Clarification",
+    "detail": "Paused: 1 open question(s) await the clinician",
+    "related_ids": [
+      "q-lm3-001"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.974212Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0013",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 13,
+    "stage": "clarification",
+    "status": "completed",
+    "title": "Clinician Clarification",
+    "detail": "Answer to q-lm3-001 recorded verbatim; workflow resumed",
+    "related_ids": [
+      "q-lm3-001",
+      "clar-q-lm3-001"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.978817Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0014",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 14,
+    "stage": "evidence_retrieval",
+    "status": "started",
+    "title": "Evidence Retrieval (re-run) started",
+    "detail": null,
+    "related_ids": [
+      "LM-3"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.978824Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0015",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 15,
+    "stage": "evidence_retrieval",
+    "status": "completed",
+    "title": "Evidence Retrieval (re-run) completed",
+    "detail": "6 candidate(s) for 1 affected criteria (clarifications searched)",
+    "related_ids": [
+      "LM-3"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.979300Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0016",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 16,
+    "stage": "evidence_mapping",
+    "status": "started",
+    "title": "Evidence Mapper (re-run) started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.979305Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0017",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 17,
+    "stage": "evidence_mapping",
+    "status": "completed",
+    "title": "Evidence Mapper (re-run) completed",
+    "detail": "Accepted 6 evidence item(s) for affected criteria",
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.979439Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0018",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 18,
+    "stage": "gap_detection",
+    "status": "started",
+    "title": "Gap Detector (re-run) started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.979442Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0019",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 19,
+    "stage": "gap_detection",
+    "status": "completed",
+    "title": "Gap Detector (re-run) completed",
+    "detail": "Re-evaluated affected criteria \u2014 LM-3: missing \u2192 met",
+    "related_ids": [
+      "LM-3"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.979563Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0020",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 20,
+    "stage": "gap_detection",
+    "status": "started",
+    "title": "Documentation readiness started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.979570Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0021",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 21,
+    "stage": "gap_detection",
+    "status": "completed",
+    "title": "Documentation readiness completed",
+    "detail": "Readiness 93/100 (post_clarification_1); documentation completeness only \u2014 not an approval prediction",
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.979630Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0022",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 22,
+    "stage": "disclosure_review",
+    "status": "started",
+    "title": "Disclosure Agent started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.982707Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0023",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 23,
+    "stage": "disclosure_review",
+    "status": "completed",
+    "title": "Disclosure Agent completed",
+    "detail": "8 included, 1 excluded (default is exclusion)",
+    "related_ids": [
+      "note-001",
+      "transcript-001",
+      "fhir-cond-001",
+      "fhir-obs-slr-001",
+      "fhir-med-001",
+      "fhir-ref-pt-001",
+      "fhir-sr-mri-001",
+      "fhir-cond-002",
+      "clar-q-lm3-001"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.982878Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0024",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 24,
+    "stage": "packet_generation",
+    "status": "started",
+    "title": "Packet Agent started",
+    "detail": null,
+    "related_ids": [],
+    "occurred_at": "2026-07-18T21:36:03.982895Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0025",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 25,
+    "stage": "packet_generation",
+    "status": "completed",
+    "title": "Packet Agent completed",
+    "detail": "Drafted 14 claim(s) across 10 section(s); every clinical claim cites evidence",
+    "related_ids": [
+      "pkt-case-dee9a3e64e14"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.983069Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0026",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 26,
+    "stage": "verification",
+    "status": "started",
+    "title": "Verification Agent started",
+    "detail": null,
+    "related_ids": [
+      "pkt-case-dee9a3e64e14"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.986507Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0027",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 27,
+    "stage": "verification",
+    "status": "completed",
+    "title": "Verification Agent completed",
+    "detail": "Checked 14 claim(s); 0 issue(s); passed=True",
+    "related_ids": [
+      "pkt-case-dee9a3e64e14"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.986905Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0028",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 28,
+    "stage": "form_drafting",
+    "status": "started",
+    "title": "Form Agent started",
+    "detail": null,
+    "related_ids": [
+      "pkt-case-dee9a3e64e14"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.991976Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0029",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 29,
+    "stage": "form_drafting",
+    "status": "completed",
+    "title": "Form Agent completed",
+    "detail": "Drafted 12 field(s) for Meridian Health Plans \u2014 Prior Authorization Request (MOCK)",
+    "related_ids": [
+      "pkt-case-dee9a3e64e14"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.992069Z"
+  },
+  {
+    "event_id": "case-dee9a3e64e14-ev-0030",
+    "case_id": "case-dee9a3e64e14",
+    "sequence": 30,
+    "stage": "human_review",
+    "status": "started",
+    "title": "Ready for Clinician Review",
+    "detail": "Terminal state. A human clinician reviews and acts outside AuthLens; nothing is submitted by the system.",
+    "related_ids": [
+      "form-case-dee9a3e64e14"
+    ],
+    "occurred_at": "2026-07-18T21:36:03.992081Z"
+  }
+]

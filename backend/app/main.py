@@ -34,8 +34,12 @@ def create_app(
     settings = settings or get_settings()
     repository = case_repository or deps.build_default_case_repository()
     fixtures = fixture_provider or deps.build_default_fixture_provider()
+    # Startup validation: resolving the mode fails loudly if live is requested
+    # without a key, and the orchestrator builder constructs the live provider
+    # eagerly so misconfiguration surfaces here rather than mid-request.
+    provider_mode = deps.resolve_provider_mode()
     orchestrator = workflow_orchestrator or deps.build_default_workflow_orchestrator(
-        repository, fixtures
+        repository, fixtures, provider_mode=provider_mode
     )
     case_service = CaseService(repository, fixtures)
 
@@ -63,6 +67,8 @@ def create_app(
     app.state.case_repository = repository
     app.state.workflow_orchestrator = orchestrator
     app.state.case_service = case_service
+    app.state.provider_mode = provider_mode
+    logger.info("AuthLens API configured (provider_mode=%s)", provider_mode)
 
     app.add_middleware(
         CORSMiddleware,

@@ -26,6 +26,15 @@ never submits anything.
 | 11 | [DEPENDENCY_POLICY.md](DEPENDENCY_POLICY.md) | How to request a new dependency (never edit pyproject.toml directly) |
 | 12 | [ABRIDGE_DATASET.md](ABRIDGE_DATASET.md) | Official Abridge dataset: verified structure, loader spec, usage plan |
 
+## Build status
+
+The backend is **fully integrated and green** (`uv run pytest` from `backend/`:
+351 passed, 1 skipped). See [INTEGRATION_REPORT.md](INTEGRATION_REPORT.md) for
+what was wired, tests run, known limitations, and the three-minute demo
+sequence; [../BUILD_LOG.md](../BUILD_LOG.md) for the phase history; and
+[frontend_examples/](frontend_examples/) for real response payloads. Run the
+demo with `DEMO_MODE=1 uv run uvicorn app.main:app` (see the root README).
+
 ## Decision records
 
 - [0001 — Controlled workflow, not an agent swarm](decisions/0001-controlled-workflow.md)

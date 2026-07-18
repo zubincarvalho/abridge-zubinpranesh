@@ -19,6 +19,13 @@ Machine-readable spec: `contracts/openapi.yaml`. Worked payloads:
 - **No submission:** there is no submission endpoint and no `submitted`
   state. `ready_for_review` is terminal.
 - **Auth:** none (hackathon demo, synthetic data only).
+- **Provider mode:** `GET /api/health` returns
+  `provider_mode: "deterministic" | "live"`. Deterministic (default;
+  `DEMO_MODE=1` or no key) runs analysis fully in code — reproducible, no key.
+  Live (`AUTHLENS_LLM_MODE=live` or `ANTHROPIC_API_KEY` present, without
+  `DEMO_MODE`) uses the Anthropic provider for the LLM-capable stages;
+  requesting live without a key fails at **startup** — never a silent fallback
+  to the mock. The endpoint never exposes key material.
 
 ## Endpoints
 

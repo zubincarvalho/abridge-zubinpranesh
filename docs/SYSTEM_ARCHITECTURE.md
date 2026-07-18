@@ -192,3 +192,22 @@ flowchart TB
 | Persistence | In-memory repository | Demo scope; port allows swapping later |
 | Orchestration | Plain Python in `app/orchestration` | Deterministic, testable, no LLM in control flow |
 | API docs | `contracts/openapi.yaml` (hand-maintained mirror) | Frontend can codegen without running the backend |
+
+## Integration notes (implementation)
+
+Two composition details set at integration (see
+[INTEGRATION_REPORT.md](INTEGRATION_REPORT.md)) refine — but do not change — the
+architecture above:
+
+- **Per-operation evidence sources.** The evidence mapper and gap detector are
+  keyed to the case's `EvidenceSource`s. Because a clinician clarification
+  becomes a citable source at runtime, the orchestrator resolves the case's
+  sources fresh each operation (`resolve_case_sources`) and builds those two
+  stages per run via injected factories. All other stages are singletons.
+- **Provider selection.** The composition root
+  (`app/api_dependencies.py`) resolves a deterministic (default) or live LLM
+  mode. Deterministic runs the analysis fully in code; live injects the
+  Anthropic provider into the LLM-capable stages (retrieval refiner, evidence
+  mapper) while every deterministic gate still re-checks their output. Live
+  without a key fails at startup — no silent fallback. `GET /api/health`
+  reports the mode.

@@ -1,0 +1,7 @@
+{
+  "source_id": "clar-q-lm3-001",
+  "source_type": "clinician_clarification",
+  "label": "Clinician clarification (recorded verbatim)",
+  "content": "Patient completed six weeks of physical therapy and daily NSAID therapy without meaningful improvement.",
+  "fhir_resource_type": null
+}

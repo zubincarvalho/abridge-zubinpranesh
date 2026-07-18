@@ -13,7 +13,7 @@ pre-operation state, so retries re-run every stage and every safety gate.
 """
 
 import threading
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
@@ -31,9 +31,11 @@ from app.contracts import (
     DisclosureDecisionType,
     EvidenceCandidate,
     EvidenceItem,
+    EvidenceSource,
     PacketStatus,
     PayerPolicy,
     PolicyCriterion,
+    SourceType,
 )
 from app.events import EventRecorder, utc_now
 from app.ports import (
@@ -86,6 +88,49 @@ def _public_error(exc: Exception) -> str:
     return f"unexpected {type(exc).__name__}; details withheld from the timeline"
 
 
+def resolve_case_sources(case: AuthLensCase) -> dict[str, EvidenceSource]:
+    """Every citable source on the case, keyed by source_id, as EvidenceSource.
+
+    Content mirrors exactly what the retriever excerpts from, so the evidence
+    mapper's verbatim gate resolves: the encounter note/transcript text, each
+    chart item's display (+detail), and every recorded clinician clarification
+    (added at runtime — which is why this is rebuilt per operation rather than
+    fixed at construction). Consistent with ``gates.resolvable_source_contents``.
+    """
+    sources: dict[str, EvidenceSource] = {
+        case.encounter_note.source_id: EvidenceSource(
+            source_id=case.encounter_note.source_id,
+            source_type=SourceType.ENCOUNTER_NOTE,
+            label=case.encounter_note.title,
+            content=case.encounter_note.text,
+        )
+    }
+    if case.encounter_transcript is not None:
+        transcript = case.encounter_transcript
+        sources[transcript.source_id] = EvidenceSource(
+            source_id=transcript.source_id,
+            source_type=SourceType.ENCOUNTER_TRANSCRIPT,
+            label="Encounter transcript",
+            content=transcript.text,
+        )
+    for item in case.patient.chart_items:
+        content = item.display if item.detail is None else f"{item.display}\n{item.detail}"
+        sources[item.source_id] = EvidenceSource(
+            source_id=item.source_id,
+            source_type=SourceType.FHIR_RESOURCE,
+            label=item.display,
+            content=content,
+        )
+    for clarification in case.clarifications:
+        sources[clarification.clarification_id] = EvidenceSource(
+            source_id=clarification.clarification_id,
+            source_type=SourceType.CLINICIAN_CLARIFICATION,
+            label="Clinician clarification",
+            content=clarification.response,
+        )
+    return sources
+
+
 class AuthLensOrchestrator:
     def __init__(
         self,
@@ -93,22 +138,43 @@ class AuthLensOrchestrator:
         *,
         policy_parser: PolicyParser,
         evidence_retriever: EvidenceRetriever,
-        evidence_mapper: EvidenceMapper,
-        gap_detector: GapDetector,
+        evidence_mapper: EvidenceMapper | None = None,
+        gap_detector: GapDetector | None = None,
         disclosure_filter: DisclosureFilter,
         packet_generator: PacketGenerator,
         packet_verifier: PacketVerifier,
         form_drafter: FormDrafter,
+        evidence_mapper_factory: (
+            Callable[[Mapping[str, EvidenceSource]], EvidenceMapper] | None
+        ) = None,
+        gap_detector_factory: (
+            Callable[[Mapping[str, EvidenceSource]], GapDetector] | None
+        ) = None,
         policy_text_loader: Callable[[PayerPolicy], str] | None = None,
         clock: Callable[[], datetime] | None = None,
         stage_timeout_seconds: float = 120.0,
         max_parallel_retrievals: int = 8,
     ) -> None:
+        # Evidence mapping and gap detection are keyed to the case's evidence
+        # sources (note/transcript/chart/clarifications). Callers pass either a
+        # ready instance (tests with fixed sources) or a factory the
+        # orchestrator invokes per operation with freshly resolved case sources
+        # — required so a runtime clarification becomes citable evidence.
+        if (evidence_mapper is None) == (evidence_mapper_factory is None):
+            raise ValueError(
+                "provide exactly one of evidence_mapper or evidence_mapper_factory"
+            )
+        if (gap_detector is None) == (gap_detector_factory is None):
+            raise ValueError(
+                "provide exactly one of gap_detector or gap_detector_factory"
+            )
         self._cases = CaseService(repository, clock=clock)
         self._policy_parser = policy_parser
         self._evidence_retriever = evidence_retriever
         self._evidence_mapper = evidence_mapper
+        self._evidence_mapper_factory = evidence_mapper_factory
         self._gap_detector = gap_detector
+        self._gap_detector_factory = gap_detector_factory
         self._disclosure_filter = disclosure_filter
         self._packet_generator = packet_generator
         self._packet_verifier = packet_verifier
@@ -511,6 +577,18 @@ class AuthLensOrchestrator:
         with self._locks_guard:
             return self._case_locks.setdefault(case_id, threading.Lock())
 
+    def _mapper_for(self, case: AuthLensCase) -> EvidenceMapper:
+        if self._evidence_mapper is not None:
+            return self._evidence_mapper
+        assert self._evidence_mapper_factory is not None
+        return self._evidence_mapper_factory(resolve_case_sources(case))
+
+    def _gap_detector_for(self, case: AuthLensCase) -> GapDetector:
+        if self._gap_detector is not None:
+            return self._gap_detector
+        assert self._gap_detector_factory is not None
+        return self._gap_detector_factory(resolve_case_sources(case))
+
     def _rollback(self, original: AuthLensCase, working: AuthLensCase) -> None:
         """Restore the pre-operation case state, keeping the timeline events."""
         restored = original.model_copy(deep=True)
@@ -620,8 +698,9 @@ class AuthLensOrchestrator:
         candidates_by_criterion: dict[str, list[EvidenceCandidate]],
     ) -> dict[str, list[EvidenceItem]]:
         evidence_by_criterion: dict[str, list[EvidenceItem]] = {}
+        mapper = self._mapper_for(case)
         for criterion in criteria:
-            items = self._evidence_mapper.map_evidence(
+            items = mapper.map_evidence(
                 criterion, candidates_by_criterion.get(criterion.criterion_id, [])
             )
             evidence_by_criterion[criterion.criterion_id] = items
@@ -636,8 +715,9 @@ class AuthLensOrchestrator:
         criteria: list[PolicyCriterion],
         evidence_by_criterion: dict[str, list[EvidenceItem]],
     ) -> tuple[list[CriterionAssessment], list]:
+        detector = self._gap_detector_for(case)
         assessments = [
-            self._gap_detector.assess(
+            detector.assess(
                 criterion,
                 evidence_by_criterion.get(criterion.criterion_id, []),
                 case.clarifications,
@@ -645,9 +725,7 @@ class AuthLensOrchestrator:
             for criterion in criteria
         ]
         gates.check_assessments(case, criteria, assessments)
-        questions = self._gap_detector.generate_clarifications(
-            assessments, case.criteria
-        )
+        questions = detector.generate_clarifications(assessments, case.criteria)
         gates.check_questions(case, case.criteria, questions)
         return assessments, questions
 
@@ -690,7 +768,9 @@ class AuthLensOrchestrator:
         return result
 
     def _compute_readiness_checked(self, case: AuthLensCase, label: str):
-        readiness = self._gap_detector.compute_readiness(case.assessments, label)
+        readiness = self._gap_detector_for(case).compute_readiness(
+            case.assessments, label
+        )
         gates.check_readiness(case, readiness, len(case.assessments))
         return readiness
 

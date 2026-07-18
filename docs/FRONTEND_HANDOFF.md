@@ -4,8 +4,12 @@ The frontend is a clinical workflow console rendered **entirely** from
 `AuthLensCase` (returned by every case endpoint) plus two auxiliary reads
 (`/events`, `/evidence/{source_id}`). No clinical logic lives client-side.
 
-Contract: `contracts/openapi.yaml`. Realistic payloads for building against
-without a running backend: `contracts/examples/case_state_*.json`.
+Contract: `contracts/openapi.yaml`. Canonical validated payloads:
+`contracts/examples/case_state_*.json`. **Live pipeline captures** (generated
+by the integrated backend, one per demo step — intake, awaiting_clarification,
+after-clarification, ready_for_review, timelines, a citation-drawer source, and
+health): [`frontend_examples/`](frontend_examples/). Build against these
+without running the backend.
 
 ## Panel → field mapping
 

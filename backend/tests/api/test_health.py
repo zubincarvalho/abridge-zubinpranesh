@@ -14,12 +14,16 @@ def test_health_ok(client):
 
 
 def test_health_reports_deterministic_mode(client, monkeypatch):
+    monkeypatch.delenv("AUTHLENS_LLM_MODE", raising=False)
     monkeypatch.setenv("DEMO_MODE", "true")
     assert client.get("/api/health").json()["provider_mode"] == "deterministic"
 
 
 def test_health_reports_live_mode(client, monkeypatch):
+    # Live is an explicit opt-in; the indicator never depends on whether a key
+    # happens to be present in the ambient environment.
     monkeypatch.delenv("DEMO_MODE", raising=False)
+    monkeypatch.setenv("AUTHLENS_LLM_MODE", "live")
     assert client.get("/api/health").json()["provider_mode"] == "live"
 
 

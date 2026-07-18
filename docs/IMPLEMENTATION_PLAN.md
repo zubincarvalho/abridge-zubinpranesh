@@ -4,10 +4,10 @@
 
 | Phase | Who | Output | Status |
 |---|---|---|---|
-| 0 — Foundation | Architecture lead | Contracts, ports, OpenAPI, examples, fixture, docs, contract tests | **Done (this phase)** |
-| 1 — Parallel build | Agents A–G concurrently | All implementations + per-agent tests, against fakes | Next |
-| 2 — Integration | Integration agent | Wiring, dependency application, E2E tests, conflict resolution | After 1 |
-| 3 — Demo hardening | Integration agent + frontend | Live-model spot checks, grounding audit, demo script | After 2 |
+| 0 — Foundation | Architecture lead | Contracts, ports, OpenAPI, examples, fixture, docs, contract tests | **Done** |
+| 1 — Parallel build | Agents A–G concurrently | All implementations + per-agent tests, against fakes | **Done** (see `docs/agent_reports/`) |
+| 2 — Integration | Integration agent | Wiring, dependency application, E2E tests, conflict resolution | **Done** (see `docs/INTEGRATION_REPORT.md`; full suite 351 passed, 1 skipped) |
+| 3 — Demo hardening | Integration agent + frontend | Live-model spot checks, grounding audit, demo script | Frontend console remaining; backend demo verified end-to-end |
 
 Frontend is built separately against `contracts/openapi.yaml` +
 `contracts/examples/` and can start immediately (no backend needed).

@@ -31,6 +31,7 @@ from app.contracts import (
 from app.services.evidence import rules
 from app.services.evidence.duration import (
     has_vague_temporal_language,
+    is_scheduling_statement,
     parse_durations_days,
     required_days_from_requirement,
 )
@@ -111,7 +112,12 @@ def _assess_duration(
         item for item in evidence if item.source_type != SourceType.CLINICIAN_CLARIFICATION
     ]
 
-    chart_durations = [d for item in chart_items for d in parse_durations_days(item.excerpt)]
+    # A follow-up interval ("return in 4 weeks") is a scheduling instruction,
+    # not a symptom duration — exclude it from the duration decision.
+    duration_items = [
+        item for item in chart_items if not is_scheduling_statement(item.excerpt)
+    ]
+    chart_durations = [d for item in duration_items for d in parse_durations_days(item.excerpt)]
     meets = [d for d in chart_durations if d >= threshold]
     below = [d for d in chart_durations if d < threshold]
 
@@ -145,7 +151,7 @@ def _assess_duration(
             criterion,
             CriterionStatus.CONFLICTING,
             DenialRisk.HIGH,
-            f"Documented duration statements conflict ({_quote(chart_items, limit=4)}): "
+            f"Documented duration statements conflict ({_quote(duration_items, limit=4)}): "
             f"at least one meets the {threshold / 7:.0f}-week threshold and at least "
             f"one does not. The conflict is reported as documented and is left for "
             f"clinician review.",

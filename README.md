@@ -42,15 +42,40 @@ synthetic-ambient-fhir-25/  Official Abridge synthetic dataset (READ-ONLY — ne
 
 ## Quick start
 
+The backend is fully integrated. All commands run from `backend/`.
+
 ```bash
 cd backend
-uv sync
-uv run pytest tests/contracts   # 57 contract, safety & dataset tests
+uv sync                                    # install dependencies
+
+uv run pytest                              # full suite: 351 passed, 1 skipped
+uv run pytest tests/contracts              # 57 frozen contract & safety tests
+
+# Run the API in deterministic demo mode (reproducible; no API key needed):
+DEMO_MODE=1 uv run uvicorn app.main:app --reload --port 8000
 ```
 
-The API server (`app/main.py`) arrives in the parallel build phase — see
-`docs/IMPLEMENTATION_PLAN.md`. The frontend can start now against
-`contracts/openapi.yaml` and `contracts/examples/`.
+Then drive the full demo (from another shell):
+
+```bash
+BASE=http://localhost:8000/api
+CID=$(curl -s -X POST $BASE/cases -H 'content-type: application/json' \
+      -d '{"fixture_id":"lumbar_mri_prior_auth"}' | python -c 'import sys,json;print(json.load(sys.stdin)["case_id"])')
+curl -s -X POST $BASE/cases/$CID/run > /dev/null                      # → awaiting_clarification (readiness 79)
+QID=$(curl -s $BASE/cases/$CID | python -c 'import sys,json;print([q["question_id"] for q in json.load(sys.stdin)["clarification_questions"] if q["status"]=="open"][0])')
+curl -s -X POST $BASE/cases/$CID/clarifications -H 'content-type: application/json' \
+     -d "{\"question_id\":\"$QID\",\"response\":\"Patient completed six weeks of physical therapy and daily NSAID therapy without meaningful improvement.\"}" > /dev/null
+curl -s -X POST $BASE/cases/$CID/generate-packet > /dev/null          # → packet_drafted
+curl -s -X POST $BASE/cases/$CID/verify > /dev/null                   # → verified (readiness 93)
+curl -s -X POST $BASE/cases/$CID/form-draft | python -m json.tool     # → ready_for_review
+```
+
+**Provider mode.** Deterministic mode (`DEMO_MODE=1`) is fully reproducible and
+requires no key. Live LLM mode is an explicit opt-in
+(`AUTHLENS_LLM_MODE=live` + `ANTHROPIC_API_KEY`); it never silently falls back
+to the mock — see [`docs/INTEGRATION_REPORT.md`](docs/INTEGRATION_REPORT.md).
+Realistic response payloads for the frontend live in
+[`docs/frontend_examples/`](docs/frontend_examples/).
 
 ## Documentation
 

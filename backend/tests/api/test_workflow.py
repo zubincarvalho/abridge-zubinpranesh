@@ -248,21 +248,22 @@ def test_unexpected_orchestrator_error_is_500_internal_error(
     assert body["detail"] is None
 
 
-def test_placeholder_orchestrator_returns_internal_error(
-    fake_repository, fake_fixtures
+def test_default_composition_wires_the_real_orchestrator(
+    fake_repository, fake_fixtures, monkeypatch
 ):
-    from fastapi.testclient import TestClient
+    """Integration replaced the placeholder with Agent F's real orchestrator.
 
-    from app.main import create_app
+    The temporary ``PlaceholderWorkflowOrchestrator`` no longer exists; the
+    default composition root must build the deterministic
+    ``AuthLensOrchestrator`` over the real stage ports.
+    """
+    monkeypatch.setenv("DEMO_MODE", "true")  # deterministic; no key required
 
-    app = create_app(
-        case_repository=fake_repository,
-        fixture_provider=fake_fixtures,
-        seed_demo_on_startup=False,
-        cors_origins=[],
+    from app import api_dependencies as deps
+    from app.orchestration import AuthLensOrchestrator
+
+    assert not hasattr(deps, "PlaceholderWorkflowOrchestrator")
+    orchestrator = deps.build_default_workflow_orchestrator(
+        fake_repository, fake_fixtures
     )
-    with TestClient(app, raise_server_exceptions=False) as client:
-        case_id = create_case(client)
-        response = client.post(f"/api/cases/{case_id}/run")
-        body = assert_api_error(response, 500, "internal_error")
-        assert "not configured" in body["message"]
+    assert isinstance(orchestrator, AuthLensOrchestrator)

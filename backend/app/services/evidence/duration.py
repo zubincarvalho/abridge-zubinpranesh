@@ -37,6 +37,16 @@ _VAGUE_TEMPORAL_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# Follow-up / return-visit instructions carry a duration ("return in 4 weeks")
+# that is a scheduling interval, not a statement of how long a symptom or
+# therapy has lasted. Such a duration must never be counted as a symptom or
+# therapy duration.
+_SCHEDULING_PATTERN = re.compile(
+    r"\breturn in\b|\breturn to (?:clinic|office)\b|\bfollow[-\s]?up\b|\brecheck\b|"
+    r"\breassess\b|\bre-?evaluate in\b|\bnext visit\b|\bcome back\b|\bor sooner\b",
+    re.IGNORECASE,
+)
+
 _DAYS_PER_UNIT = {"day": 1.0, "week": 7.0, "month": 30.44, "year": 365.25}
 
 SIX_WEEKS_DAYS = 42.0
@@ -55,6 +65,16 @@ def parse_durations_days(text: str) -> list[float]:
 
 def has_vague_temporal_language(text: str) -> bool:
     return bool(_VAGUE_TEMPORAL_PATTERN.search(text))
+
+
+def is_scheduling_statement(text: str) -> bool:
+    """True if the text is a follow-up/return-visit instruction.
+
+    A scheduling interval ("Return in 4 weeks or sooner …") is never a
+    statement of symptom or therapy duration, so its duration must be
+    excluded from duration assessment.
+    """
+    return bool(_SCHEDULING_PATTERN.search(text))
 
 
 def required_days_from_requirement(requirement: str, default: float = SIX_WEEKS_DAYS) -> float:

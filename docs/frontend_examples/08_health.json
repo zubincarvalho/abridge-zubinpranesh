@@ -1,0 +1,6 @@
+{
+  "status": "ok",
+  "service": "authlens",
+  "version": "0.1.0",
+  "provider_mode": "deterministic"
+}

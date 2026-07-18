@@ -1,79 +1,46 @@
-"""Dependency-injection surface for the AuthLens API (Agent G).
+"""Dependency-injection and composition surface for the AuthLens API.
 
 Routes depend only on the request-scoped getters below; ``app.main.create_app``
-binds concrete instances onto ``app.state``. Defaults use the committed
-in-memory repository and fixture provider (Agent A). The workflow
-orchestrator default is a placeholder that fails loudly:
+binds concrete instances onto ``app.state``. This module is the composition
+root: it assembles Agent F's deterministic orchestrator over Agents A–E's
+port implementations and resolves the LLM provider mode explicitly.
 
-    INTEGRATION POINT — the integration agent binds Agent F's orchestration
-    engine in ``build_default_workflow_orchestrator`` (or passes an instance
-    to ``create_app(workflow_orchestrator=...)``). Nothing else changes.
+LLM provider selection (no hidden fallback from live to mock):
+
+- ``deterministic`` (default): the analysis pipeline runs fully in code with
+  no network access and no API key. Reproducible; every safety gate is
+  deterministic. A ``MockLLMProvider`` is available for any incidental use.
+- ``live``: the LLM-capable stages (retrieval refiner, evidence mapper) use a
+  real ``AnthropicLLMProvider``; every deterministic gate still re-checks
+  their output. Requires ``ANTHROPIC_API_KEY`` — if live is requested without
+  a key, startup fails loudly rather than silently downgrading to the mock.
 """
 
 from __future__ import annotations
 
+import logging
 import os
+from collections.abc import Mapping
 from typing import Literal
 
 from fastapi import Request
 
 from app.api.case_service import CaseService, FixtureSource
-from app.api.errors import ApiException
 from app.config import Settings
-from app.contracts import AgentEvent, AuthLensCase, ClarificationSubmission
-from app.ports import CaseRepository, WorkflowOrchestrator
+from app.contracts import EvidenceSource
+from app.ports import CaseRepository, EvidenceMapper, GapDetector, LLMProvider, WorkflowOrchestrator
+
+logger = logging.getLogger("authlens.integration")
 
 CORS_ORIGINS_ENV_VAR = "AUTHLENS_CORS_ORIGINS"
 DEFAULT_CORS_ORIGINS = ("http://localhost:3000", "http://localhost:5173")
+LLM_MODE_ENV_VAR = "AUTHLENS_LLM_MODE"
+
+ProviderMode = Literal["live", "deterministic"]
 
 
-class PlaceholderWorkflowOrchestrator:
-    """Satisfies the WorkflowOrchestrator port until Agent F's engine is bound.
-
-    Every method raises a 500 ``internal_error`` so the API surface stays
-    contract-shaped even before integration.
-    """
-
-    def _unconfigured(self) -> None:
-        raise ApiException(
-            500,
-            "internal_error",
-            "The workflow orchestrator is not configured on this deployment.",
-            detail=(
-                "Integration pending: bind the orchestration engine in "
-                "app/api_dependencies.py (build_default_workflow_orchestrator)."
-            ),
-        )
-
-    def start_analysis(self, case_id: str) -> AuthLensCase:
-        self._unconfigured()
-        raise AssertionError("unreachable")
-
-    def submit_clarification(
-        self, case_id: str, submission: ClarificationSubmission
-    ) -> AuthLensCase:
-        self._unconfigured()
-        raise AssertionError("unreachable")
-
-    def generate_packet(self, case_id: str) -> AuthLensCase:
-        self._unconfigured()
-        raise AssertionError("unreachable")
-
-    def verify_packet(self, case_id: str) -> AuthLensCase:
-        self._unconfigured()
-        raise AssertionError("unreachable")
-
-    def draft_form(self, case_id: str) -> AuthLensCase:
-        self._unconfigured()
-        raise AssertionError("unreachable")
-
-    def get_case(self, case_id: str) -> AuthLensCase:
-        self._unconfigured()
-        raise AssertionError("unreachable")
-
-    def get_events(self, case_id: str) -> list[AgentEvent]:
-        self._unconfigured()
-        raise AssertionError("unreachable")
+class ProviderConfigurationError(RuntimeError):
+    """Live LLM mode was requested without an API key; refusing to fall back."""
 
 
 # --- Default builders (used by create_app when nothing is injected) ---------
@@ -91,13 +58,99 @@ def build_default_fixture_provider() -> FixtureSource:
     return FixtureProvider()
 
 
+# --- LLM provider resolution (explicit; no hidden live->mock fallback) ------
+
+
+def resolve_provider_mode() -> ProviderMode:
+    """Resolve the effective LLM runtime mode from the environment.
+
+    Rules (first match wins):
+    - ``DEMO_MODE`` truthy                 -> deterministic
+    - ``AUTHLENS_LLM_MODE=deterministic``  -> deterministic
+    - ``AUTHLENS_LLM_MODE=live``           -> live (needs a key, else startup error)
+    - otherwise                            -> live iff ``ANTHROPIC_API_KEY`` is set,
+                                              else deterministic
+
+    Never inspects or exposes key material beyond presence.
+    """
+    from app.providers.config import LLMProviderConfig
+
+    cfg = LLMProviderConfig.from_env()
+    explicit = os.environ.get(LLM_MODE_ENV_VAR, "").strip().lower()
+    if cfg.demo_mode or explicit == "deterministic":
+        return "deterministic"
+    if explicit == "live":
+        return "live"
+    return "live" if cfg.api_key else "deterministic"
+
+
+def build_llm_provider(mode: ProviderMode) -> LLMProvider:
+    """Construct the provider for ``mode``. Raises in live mode without a key."""
+    from app.providers.config import LLMProviderConfig
+    from app.providers.mock_provider import MockLLMProvider
+
+    if mode == "deterministic":
+        return MockLLMProvider()
+    cfg = LLMProviderConfig.from_env()
+    if not cfg.api_key:
+        raise ProviderConfigurationError(
+            "live LLM mode requires ANTHROPIC_API_KEY; refusing to fall back to the "
+            "mock provider. Set ANTHROPIC_API_KEY, or select deterministic mode "
+            "(DEMO_MODE=1 or AUTHLENS_LLM_MODE=deterministic)."
+        )
+    from app.providers.anthropic_provider import AnthropicLLMProvider
+
+    return AnthropicLLMProvider(cfg)
+
+
+# --- Composition root -------------------------------------------------------
+
+
 def build_default_workflow_orchestrator(
-    repository: CaseRepository, fixtures: FixtureSource
+    repository: CaseRepository,
+    fixtures: FixtureSource,
+    *,
+    provider_mode: ProviderMode | None = None,
 ) -> WorkflowOrchestrator:
-    # INTEGRATION POINT: replace with Agent F's engine, e.g.
-    #   from app.orchestration.engine import WorkflowEngine
-    #   return WorkflowEngine(repository=repository, ...)
-    return PlaceholderWorkflowOrchestrator()
+    """Assemble the deterministic orchestrator over every stage port.
+
+    The analysis backbone is deterministic. In live mode a real provider is
+    injected into the LLM-capable stages (retrieval refiner + evidence
+    mapper); the deterministic gates re-check their output either way.
+    Evidence mapping and gap detection are wired as *factories* so the
+    orchestrator can build them per operation with the case's evidence sources
+    (a runtime clarification must become citable evidence).
+    """
+    from app.agents.disclosure_agent import DisclosureAgent
+    from app.agents.evidence_mapper import build_evidence_mapper
+    from app.agents.evidence_retriever import build_evidence_retriever
+    from app.agents.gap_detector import build_gap_detector
+    from app.agents.packet_generator import PacketGeneratorAgent
+    from app.agents.policy_parser import build_policy_parser
+    from app.agents.verification_agent import VerificationAgent
+    from app.orchestration import AuthLensOrchestrator
+    from app.services.form_draft import MockPayerFormDrafter
+
+    mode = provider_mode or resolve_provider_mode()
+    provider: LLMProvider | None = build_llm_provider(mode) if mode == "live" else None
+
+    def evidence_mapper_factory(sources: Mapping[str, EvidenceSource]) -> EvidenceMapper:
+        return build_evidence_mapper(sources, provider)
+
+    def gap_detector_factory(sources: Mapping[str, EvidenceSource]) -> GapDetector:
+        return build_gap_detector(sources)
+
+    return AuthLensOrchestrator(
+        repository,
+        policy_parser=build_policy_parser(),
+        evidence_retriever=build_evidence_retriever(provider),
+        evidence_mapper_factory=evidence_mapper_factory,
+        gap_detector_factory=gap_detector_factory,
+        disclosure_filter=DisclosureAgent(),
+        packet_generator=PacketGeneratorAgent(),
+        packet_verifier=VerificationAgent(),
+        form_drafter=MockPayerFormDrafter(),
+    )
 
 
 # --- Environment-driven configuration helpers -------------------------------
@@ -109,13 +162,6 @@ def resolve_cors_origins() -> list[str]:
     if raw is None or not raw.strip():
         return list(DEFAULT_CORS_ORIGINS)
     return [origin.strip() for origin in raw.split(",") if origin.strip()]
-
-
-def resolve_provider_mode() -> Literal["live", "deterministic"]:
-    """LLM runtime mode for health details. Never touches key material."""
-    from app.providers.config import LLMProviderConfig
-
-    return "deterministic" if LLMProviderConfig.from_env().demo_mode else "live"
 
 
 # --- Request-scoped getters (state is bound by create_app) ------------------
@@ -137,5 +183,12 @@ def get_case_service(request: Request) -> CaseService:
     return request.app.state.case_service
 
 
-def get_provider_mode() -> Literal["live", "deterministic"]:
+def get_provider_mode(request: Request) -> ProviderMode:
+    """Report the effective LLM runtime mode.
+
+    Resolved from the environment at request time (it never probes the
+    Anthropic API or exposes key material). In normal operation this equals
+    the mode validated at startup (``app.state.provider_mode``); resolving
+    live keeps the indicator truthful if the operator changes configuration.
+    """
     return resolve_provider_mode()
