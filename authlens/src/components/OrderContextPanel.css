@@ -1,0 +1,240 @@
+.ocp {
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+}
+
+/* ── Section shell ── */
+.ocp-section {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-light);
+  flex-shrink: 0;
+}
+
+.ocp-chart-section {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.ocp-section-header {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.ocp-section-header--authlens {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--brand-blue);
+}
+
+.ocp-al-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--brand-blue);
+}
+
+.ocp-ai-pill {
+  font-size: 9px;
+  font-weight: 700;
+  background: #ede9fe;
+  color: #5b21b6;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.04em;
+}
+
+/* ── Order card ── */
+.ocp-order-card {
+  background: #f6f9fc;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.ocp-service-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.ocp-order-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.ocp-cpt-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-family: 'Menlo', 'Consolas', monospace;
+}
+
+.ocp-auth-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #92400e;
+  background: #fef3c7;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.ocp-kv {
+  display: flex;
+  gap: 5px;
+  align-items: baseline;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ocp-key {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-width: 34px;
+  flex-shrink: 0;
+}
+
+.ocp-policy-id {
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+/* ── AuthLens idle ── */
+.ocp-idle {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.ocp-idle-text {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+.ocp-action-btn {
+  width: 100%;
+  justify-content: center;
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+/* ── AuthLens status card ── */
+.ocp-authlens-section {
+  background: #f9fbfd;
+}
+
+/* ── Summary text (post-analysis) ── */
+.ocp-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ocp-summary-met {
+  font-size: 12px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.ocp-summary-item {
+  font-size: 11.5px;
+}
+
+.ocp-summary-weak {
+  color: #c07000;
+}
+
+.ocp-summary-missing {
+  color: #b91c1c;
+}
+
+.ocp-clinician-link {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--brand-blue);
+  cursor: pointer;
+  padding: 0;
+  margin-top: 3px;
+  text-decoration: underline dotted;
+  text-align: left;
+  transition: color 0.1s;
+}
+
+.ocp-clinician-link:hover {
+  color: var(--brand-blue-light);
+  text-decoration: underline solid;
+}
+
+/* ── FHIR chart items ── */
+.ocp-chart-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ocp-chart-item {
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  background: #f6f9fc;
+  border: 1px solid var(--border-light);
+}
+
+.ocp-chart-item--excluded {
+  background: #f6f7f8;
+  border-color: var(--border-light);
+  opacity: 0.7;
+}
+
+.ocp-chart-item-top {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 2px;
+}
+
+.ocp-excluded-badge {
+  font-size: 9px;
+  font-weight: 700;
+  background: #e5e7eb;
+  color: #6b7280;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+}
+
+.ocp-chart-item-text {
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.ocp-chart-item-detail {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  font-family: 'Menlo', 'Consolas', monospace;
+  letter-spacing: -0.01em;
+}
+
+.ocp-chart-item--excluded .ocp-chart-item-detail {
+  color: #9ca3af;
+}

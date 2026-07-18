@@ -1,0 +1,150 @@
+.evidence-matrix {
+  width: 100%;
+}
+
+.matrix-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.matrix-policy-ref {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+
+.matrix-table-wrap {
+  overflow-x: auto;
+}
+
+.matrix-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.matrix-table thead tr {
+  background: #f8fafc;
+}
+
+.matrix-table th {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.matrix-table td {
+  padding: 10px 12px;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border-light);
+  line-height: 1.4;
+}
+
+.matrix-row:last-child td {
+  border-bottom: none;
+}
+
+.matrix-row--met {
+  background: #fafffe;
+}
+
+.matrix-row--weak {
+  background: #fffdf5;
+}
+
+.matrix-row--missing {
+  background: #fffafa;
+}
+
+.matrix-row:hover {
+  background: #f0f9ff;
+}
+
+.matrix-criterion {
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 200px;
+}
+
+.matrix-evidence-link {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1.5;
+  text-decoration: underline dotted var(--border);
+  transition: color 0.12s;
+}
+
+.matrix-evidence-link:hover {
+  color: var(--brand-blue);
+  text-decoration: underline solid var(--brand-blue);
+}
+
+.matrix-source-link {
+  background: none;
+  border: none;
+  color: var(--brand-blue);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color 0.12s;
+}
+
+.matrix-source-link:hover {
+  color: var(--brand-blue-light);
+  text-decoration: underline;
+}
+
+.matrix-link-icon {
+  font-size: 10px;
+  opacity: 0.7;
+}
+
+.matrix-fix {
+  min-width: 160px;
+}
+
+.matrix-fix-none {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.matrix-fix-text {
+  font-size: 11px;
+  color: var(--status-weak);
+  font-weight: 600;
+  background: var(--status-weak-bg);
+  padding: 2px 6px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.matrix-crit-id {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.matrix-source-type {
+  font-size: 10px;
+  font-weight: 700;
+}

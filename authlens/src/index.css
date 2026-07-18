@@ -1,0 +1,216 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* Epic primary blue — actions, active states, links */
+  --brand-blue: #2360a0;
+  --brand-blue-light: #2e78c4;
+  --brand-teal: #006B6B;
+  --brand-teal-light: #dff0f0;
+
+  /* Page + panel backgrounds */
+  --bg-page: #e4e8ec;
+  --bg-panel: #ffffff;
+  --bg-chrome: #edf0f5;
+
+  /* Epic deep navy — left nav rail + chrome bar */
+  --bg-sidebar: #1a4468;
+  --bg-sidebar-hover: #1f5287;
+  --bg-sidebar-active: #0f3050;
+
+  /* Borders */
+  --border: #c2cedd;
+  --border-light: #d8e2ea;
+
+  /* Text */
+  --text-primary: #18202e;
+  --text-secondary: #38506a;
+  --text-muted: #637f99;
+  --text-sidebar: #b4cde0;
+  --text-sidebar-active: #ffffff;
+
+  /* Activity tab */
+  --tab-inactive-text: #567898;
+
+  /* Status — clinical standard (unchanged) */
+  --status-met: #15803d;
+  --status-met-bg: #dcfce7;
+  --status-weak: #92400e;
+  --status-weak-bg: #fef3c7;
+  --status-missing: #991b1b;
+  --status-missing-bg: #fee2e2;
+
+  /* Evidence highlight — Abridge yellow */
+  --highlight-bg: #fef3c7;
+  --highlight-border: #f59e0b;
+
+  /* Border radius — tighter for Epic aesthetic */
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.07);
+  --shadow-md: 0 2px 6px rgba(0,0,0,0.10);
+  --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+  background: var(--bg-page);
+  line-height: 1.5;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #b0c2d2; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #92aabf; }
+
+/* Status chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.chip-met     { background: var(--status-met-bg);     color: var(--status-met);     }
+.chip-weak    { background: var(--status-weak-bg);    color: var(--status-weak);    }
+.chip-missing { background: var(--status-missing-bg); color: var(--status-missing); }
+.chip-blue    { background: #dbeafe; color: #1e40af; }
+.chip-gray    { background: #edf0f4; color: #486070; }
+.chip-purple  { background: #ede9fe; color: #5b21b6; }
+.chip-teal    { background: var(--brand-teal-light); color: var(--brand-teal); }
+.chip-orange  { background: #ffedd5; color: #9a3412; }
+
+/* Panel base */
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border-light);
+  background: #f6f8fb;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.panel-header-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.panel-body {
+  padding: 10px 12px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 13px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  transition: all 0.12s ease;
+}
+
+.btn-primary  { background: var(--brand-blue);  color: #fff; }
+.btn-primary:hover { background: var(--brand-blue-light); }
+
+.btn-secondary {
+  background: #f0f4f8;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover { background: #e2eaf0; }
+
+.btn-teal  { background: var(--brand-teal); color: #fff; }
+.btn-teal:hover { background: #005858; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--brand-blue);
+  border: 1px solid var(--brand-blue);
+}
+.btn-outline:hover { background: #eff6ff; }
+
+/* FHIR resource tag */
+.fhir-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: #e0e7ff;
+  color: #3730a3;
+  letter-spacing: 0.04em;
+}
+
+/* Score bar */
+.score-bar-track {
+  height: 5px;
+  background: #d8e2ea;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.4,0,0.2,1), background 0.4s ease;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: 8px 0;
+}
+
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+.animate-fade-in   { animation: fadeIn       0.22s ease forwards; }
+.animate-slide-right { animation: slideInRight 0.20s ease forwards; }
