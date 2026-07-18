@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './index.css';
 import './App.css';
 
@@ -13,26 +13,113 @@ import PriorAuthFormDraft from './components/PriorAuthFormDraft';
 import PacketStatusPanel  from './components/PacketStatusPanel';
 import SourceDrawer       from './components/SourceDrawer';
 
-type CenterTab = 'evidence' | 'note' | 'agents';
+import {
+  getDemoCase,
+  runAnalysis,
+  submitClarification,
+  generatePacket,
+  verifyPacket,
+  draftForm,
+  hasRunAnalysis as apiHasRun,
+  hasClarificationRecorded,
+  openQuestion,
+  type ApiCase,
+} from './api/client';
 
+import { CLARIFICATION_RESPONSE } from './data/mockCase';
+
+type CenterTab = 'evidence' | 'note' | 'agents';
 type SelectedSource = { sourceId: string; excerpt?: string };
 
 export default function App() {
-  const [hasRunAnalysis,   setHasRunAnalysis]   = useState(false);
-  const [hasClarification, setHasClarification] = useState(false);
-  const [selectedSource,   setSelectedSource]   = useState<SelectedSource | undefined>();
-  const [centerTab,        setCenterTab]         = useState<CenterTab>('evidence');
-  const [showFormDrawer,   setShowFormDrawer]   = useState(false);
+  const [liveCase,       setLiveCase]       = useState<ApiCase | null>(null);
+  const [caseId,         setCaseId]         = useState<string | null>(null);
+  const [isLoading,      setIsLoading]      = useState(false);
+  const [loadingStage,   setLoadingStage]   = useState<string>('');
+  const [apiError,       setApiError]       = useState<string | null>(null);
+  const [selectedSource, setSelectedSource] = useState<SelectedSource | undefined>();
+  const [centerTab,      setCenterTab]      = useState<CenterTab>('evidence');
+  const [showFormDrawer, setShowFormDrawer] = useState(false);
 
-  function handleCheckReadiness() {
-    setHasRunAnalysis(true);
-    setCenterTab('evidence');
-  }
+  // Derived booleans from live case
+  const hasRunAnalysis   = liveCase ? apiHasRun(liveCase)             : false;
+  const hasClarification = liveCase ? hasClarificationRecorded(liveCase) : false;
 
-  function handleAddClarification() {
-    setHasClarification(true);
+  // Load demo case on mount so we have a caseId ready
+  useEffect(() => {
+    getDemoCase()
+      .then((c) => {
+        setLiveCase(c);
+        setCaseId(c.case_id);
+      })
+      .catch((err) => {
+        console.warn('Backend unavailable — running in offline demo mode:', err.message);
+        // Offline fallback: set caseId to null; components fall back to mock constants
+      });
+  }, []);
+
+  const handleCheckReadiness = useCallback(async () => {
+    if (!caseId) {
+      // No backend — instant mock transition
+      setLiveCase(null);
+      setCenterTab('evidence');
+      return;
+    }
+    setIsLoading(true);
+    setLoadingStage('Running analysis…');
+    setApiError(null);
+    try {
+      const updated = await runAnalysis(caseId);
+      setLiveCase(updated);
+      setCenterTab('evidence');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setApiError(`Analysis failed: ${msg}`);
+    } finally {
+      setIsLoading(false);
+      setLoadingStage('');
+    }
+  }, [caseId]);
+
+  const handleAddClarification = useCallback(async () => {
     setCenterTab('evidence');
-  }
+
+    if (!caseId || !liveCase) {
+      // Offline fallback — instant mock transition
+      setLiveCase(null);
+      return;
+    }
+
+    const question = openQuestion(liveCase);
+    if (!question) return;
+
+    setIsLoading(true);
+    setApiError(null);
+
+    try {
+      setLoadingStage('Recording clarification…');
+      const afterClar = await submitClarification(caseId, question.question_id, CLARIFICATION_RESPONSE);
+      setLiveCase(afterClar);
+
+      setLoadingStage('Generating packet…');
+      const afterPacket = await generatePacket(caseId);
+      setLiveCase(afterPacket);
+
+      setLoadingStage('Verifying packet…');
+      const afterVerify = await verifyPacket(caseId);
+      setLiveCase(afterVerify);
+
+      setLoadingStage('Drafting form…');
+      const afterForm = await draftForm(caseId);
+      setLiveCase(afterForm);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setApiError(`Clarification pipeline failed: ${msg}`);
+    } finally {
+      setIsLoading(false);
+      setLoadingStage('');
+    }
+  }, [caseId, liveCase]);
 
   function handleSourceClick(sourceId: string, excerpt?: string) {
     setSelectedSource({ sourceId, excerpt });
@@ -63,20 +150,37 @@ export default function App() {
             </div>
           </div>
 
+          {/* Loading / error banner */}
+          {isLoading && (
+            <div className="pa-loading-banner">
+              <span className="pa-loading-spinner" />
+              {loadingStage || 'Working…'}
+            </div>
+          )}
+          {apiError && (
+            <div className="pa-error-banner">
+              ⚠ {apiError}
+              <button className="pa-error-dismiss" onClick={() => setApiError(null)}>✕</button>
+            </div>
+          )}
+
           {/* 3-column PA workspace */}
           <div className="pa-workspace">
 
-            {/* ── Left column: Order context + AuthLens status ── */}
+            {/* ── Left column ── */}
             <aside className="pa-col pa-col-left">
               <OrderContextPanel
                 hasRunAnalysis={hasRunAnalysis}
                 hasClarification={hasClarification}
                 onCheckReadiness={handleCheckReadiness}
                 onAddClarification={handleAddClarification}
+                assessments={liveCase?.assessments}
+                chartItems={liveCase?.patient.chart_items}
+                isLoading={isLoading}
               />
             </aside>
 
-            {/* ── Center column: Evidence / Note / Agent log ── */}
+            {/* ── Center column ── */}
             <section className="pa-col pa-col-center">
               {hasRunAnalysis ? (
                 <>
@@ -104,10 +208,14 @@ export default function App() {
                         <EvidenceMatrix
                           hasClarification={hasClarification}
                           onSourceClick={handleSourceClick}
+                          assessments={liveCase?.assessments}
+                          criteria={liveCase?.criteria}
                         />
                         <GapResolutionPanel
                           hasClarification={hasClarification}
                           onAddClarification={handleAddClarification}
+                          question={liveCase ? openQuestion(liveCase) ?? undefined : undefined}
+                          clarificationResponse={liveCase?.clarifications[0]?.response}
                         />
                       </div>
                     )}
@@ -116,6 +224,10 @@ export default function App() {
                         <AbridgeNotePanel
                           hasClarification={hasClarification}
                           onPhraseClick={handleSourceClick}
+                          noteText={liveCase?.encounter_note.text}
+                          noteSourceId={liveCase?.encounter_note.source_id}
+                          assessments={liveCase?.assessments}
+                          criteria={liveCase?.criteria}
                         />
                       </div>
                     )}
@@ -124,6 +236,7 @@ export default function App() {
                         <AgentTimeline
                           hasRunAnalysis={hasRunAnalysis}
                           hasClarification={hasClarification}
+                          events={liveCase?.events}
                         />
                       </div>
                     )}
@@ -146,12 +259,14 @@ export default function App() {
               )}
             </section>
 
-            {/* ── Right column: Packet status ── */}
+            {/* ── Right column ── */}
             <aside className="pa-col pa-col-right">
               <PacketStatusPanel
                 hasRunAnalysis={hasRunAnalysis}
                 hasClarification={hasClarification}
                 onOpenForm={() => setShowFormDrawer(true)}
+                assessments={liveCase?.assessments}
+                caseStatus={liveCase?.status}
               />
             </aside>
           </div>
@@ -163,6 +278,7 @@ export default function App() {
           sourceId={selectedSource.sourceId}
           excerpt={selectedSource.excerpt}
           onClose={() => setSelectedSource(undefined)}
+          caseId={caseId ?? undefined}
         />
       )}
 
@@ -177,6 +293,8 @@ export default function App() {
               <PriorAuthFormDraft
                 hasClarification={hasClarification}
                 onSourceClick={handleSourceClick}
+                formDraft={liveCase?.form_draft ?? undefined}
+                assessments={liveCase?.assessments}
               />
             </div>
           </div>

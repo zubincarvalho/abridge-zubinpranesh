@@ -3,13 +3,20 @@ import {
   CLARIFICATION_QUESTION,
   CLARIFICATION_RESPONSE,
 } from '../data/mockCase';
+import type { ApiClarificationQuestion } from '../api/client';
 
 type Props = {
   hasClarification: boolean;
   onAddClarification: () => void;
+  question?: ApiClarificationQuestion;
+  clarificationResponse?: string;
 };
 
-export default function GapResolutionPanel({ hasClarification, onAddClarification }: Props) {
+export default function GapResolutionPanel({ hasClarification, onAddClarification, question: liveQuestion, clarificationResponse: liveResponse }: Props) {
+  const activeQuestion = liveQuestion ?? CLARIFICATION_QUESTION;
+  const activeResponse = liveResponse ?? CLARIFICATION_RESPONSE;
+  const linkedCriterion = activeQuestion.criterion_ids[0] ?? 'LM-3';
+
   return (
     <div className="gap-panel panel">
       <div className="panel-header">
@@ -26,9 +33,9 @@ export default function GapResolutionPanel({ hasClarification, onAddClarificatio
           <>
             <div className="gap-question-item">
               <div className="gap-q-content">
-                <div className="gap-q-text">{CLARIFICATION_QUESTION.question}</div>
-                <div className="gap-q-ref">LM-3 — Completed and failed conservative treatment</div>
-                <div className="gap-q-why">{CLARIFICATION_QUESTION.why_needed}</div>
+                <div className="gap-q-text">{activeQuestion.question}</div>
+                <div className="gap-q-ref">{linkedCriterion} — Completed and failed conservative treatment</div>
+                <div className="gap-q-why">{activeQuestion.why_needed}</div>
               </div>
             </div>
             <div className="gap-action-row">
@@ -51,11 +58,11 @@ export default function GapResolutionPanel({ hasClarification, onAddClarificatio
               </div>
             </div>
             <div className="gap-clarification-text">
-              "{CLARIFICATION_RESPONSE}"
+              "{activeResponse}"
             </div>
             <div className="gap-linked-facts">
               <span className="gap-linked-fact gap-linked-fact--met">Added to note draft</span>
-              <span className="gap-linked-fact gap-linked-fact--met">Linked to LM-3</span>
+              <span className="gap-linked-fact gap-linked-fact--met">Linked to {linkedCriterion}</span>
               <span className="gap-linked-fact gap-linked-fact--met">Authorization packet updated</span>
             </div>
           </div>

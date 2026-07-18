@@ -1,10 +1,12 @@
 import './AgentTimeline.css';
 import { EVENTS_PRE_CLARIFICATION, EVENTS_POST_CLARIFICATION } from '../data/mockCase';
 import type { AgentStage, EventStatus } from '../data/mockCase';
+import type { ApiAgentEvent } from '../api/client';
 
 type Props = {
   hasRunAnalysis: boolean;
   hasClarification: boolean;
+  events?: ApiAgentEvent[];
 };
 
 const STAGE_ICON: Record<AgentStage, string> = {
@@ -35,10 +37,11 @@ const STATUS_LABEL: Record<EventStatus, string> = {
   skipped: 'Skipped',
 };
 
-export default function AgentTimeline({ hasRunAnalysis, hasClarification }: Props) {
-  const events = hasClarification
-    ? EVENTS_POST_CLARIFICATION
-    : EVENTS_PRE_CLARIFICATION;
+export default function AgentTimeline({ hasRunAnalysis, hasClarification, events: liveEvents }: Props) {
+  // Use live events if available, sorted by sequence; fall back to mock constants
+  const events = liveEvents
+    ? [...liveEvents].sort((a, b) => a.sequence - b.sequence)
+    : (hasClarification ? EVENTS_POST_CLARIFICATION : EVENTS_PRE_CLARIFICATION);
 
   return (
     <div className="agent-timeline panel">

@@ -3,12 +3,16 @@ import {
   CHART_ITEMS,
   ASSESSMENTS,
 } from '../data/mockCase';
+import type { ApiCriterionAssessment, ApiChartItem } from '../api/client';
 
 type Props = {
   hasRunAnalysis: boolean;
   hasClarification: boolean;
   onCheckReadiness: () => void;
   onAddClarification: () => void;
+  assessments?: ApiCriterionAssessment[];
+  chartItems?: ApiChartItem[];
+  isLoading?: boolean;
 };
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -26,11 +30,19 @@ export default function OrderContextPanel({
   hasClarification,
   onCheckReadiness,
   onAddClarification,
+  assessments: liveAssessments,
+  chartItems: liveChartItems,
+  isLoading = false,
 }: Props) {
+  const activeAssessments = liveAssessments ?? ASSESSMENTS;
+  const activeChartItems  = liveChartItems  ?? CHART_ITEMS;
+
   const statusCounts = hasRunAnalysis
-    ? ASSESSMENTS.reduce(
+    ? activeAssessments.reduce(
         (acc, a) => {
-          const st = hasClarification ? a.status_after : a.status;
+          const st = liveAssessments
+            ? a.status
+            : (hasClarification ? (a as any).status_after ?? a.status : a.status);
           acc[st] = (acc[st] ?? 0) + 1;
           return acc;
         },
@@ -72,8 +84,12 @@ export default function OrderContextPanel({
             <p className="ocp-idle-text">
               Ready to analyze encounter against 7 criteria in MHP-IMG-2201 and surface linked evidence.
             </p>
-            <button className="btn btn-primary ocp-action-btn" onClick={onCheckReadiness}>
-              Check Readiness
+            <button
+              className="btn btn-primary ocp-action-btn"
+              onClick={onCheckReadiness}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Analyzing…' : 'Check Readiness'}
             </button>
           </div>
         ) : (
@@ -108,7 +124,7 @@ export default function OrderContextPanel({
       <div className="ocp-section ocp-chart-section">
         <div className="ocp-section-header">Clinical Context</div>
         <div className="ocp-chart-list">
-          {CHART_ITEMS.map((item) => {
+          {activeChartItems.map((item) => {
             const excluded = item.source_id === EXCLUDED_ID;
             return (
               <div

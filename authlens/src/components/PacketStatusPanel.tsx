@@ -1,14 +1,29 @@
 import './PacketStatusPanel.css';
 import { READINESS_INITIAL, READINESS_POST_CLARIFICATION } from '../data/mockCase';
+import type { ApiCriterionAssessment, CaseStatus } from '../api/client';
 
 type Props = {
   hasRunAnalysis: boolean;
   hasClarification: boolean;
   onOpenForm: () => void;
+  assessments?: ApiCriterionAssessment[];
+  caseStatus?: CaseStatus;
 };
 
-export default function PacketStatusPanel({ hasRunAnalysis, hasClarification, onOpenForm }: Props) {
-  const readiness = hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL;
+export default function PacketStatusPanel({ hasRunAnalysis, hasClarification, onOpenForm, assessments: liveAssessments, caseStatus }: Props) {
+  const mockReadiness = hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL;
+
+  // Derive readiness counts from live assessments or fall back to mock
+  const readiness = liveAssessments
+    ? {
+        criteria_met:     liveAssessments.filter((a) => a.status === 'met').length,
+        criteria_weak:    liveAssessments.filter((a) => a.status === 'weak').length,
+        criteria_missing: liveAssessments.filter((a) => a.status === 'missing').length,
+      }
+    : mockReadiness;
+
+  const totalCriteria = liveAssessments ? liveAssessments.length : 7;
+  const isReadyForReview = caseStatus === 'ready_for_review' || caseStatus === 'verified';
 
   if (!hasRunAnalysis) {
     return (
@@ -35,13 +50,13 @@ export default function PacketStatusPanel({ hasRunAnalysis, hasClarification, on
         )}
       </div>
       <div className="psp-body">
-        <div className={`psp-readiness-status ${hasClarification ? 'psp-readiness-ready' : 'psp-readiness-pending'}`}>
-          {hasClarification ? 'Ready for clinician review' : 'Not ready for review'}
+        <div className={`psp-readiness-status ${(hasClarification || isReadyForReview) ? 'psp-readiness-ready' : 'psp-readiness-pending'}`}>
+          {(hasClarification || isReadyForReview) ? 'Ready for clinician review' : 'Not ready for review'}
         </div>
 
         <div className="psp-summary">
           <div className="psp-summary-item psp-summary-met">
-            ✓ {readiness.criteria_met} of 7 requirements supported
+            ✓ {readiness.criteria_met} of {totalCriteria} requirements supported
           </div>
           {hasClarification ? (
             <div className="psp-summary-item psp-summary-met">
@@ -68,7 +83,7 @@ export default function PacketStatusPanel({ hasRunAnalysis, hasClarification, on
           )}
         </div>
 
-        {hasClarification ? (
+        {(hasClarification || isReadyForReview) ? (
           <div className="psp-btn-group">
             <button className="btn btn-primary psp-open-btn" onClick={onOpenForm}>
               Review packet

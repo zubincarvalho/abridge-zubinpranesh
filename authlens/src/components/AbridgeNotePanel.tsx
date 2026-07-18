@@ -1,10 +1,15 @@
 import './AbridgeNotePanel.css';
 import { NOTE_TEXT, NOTE_HIGHLIGHTS, CLARIFICATION_RESPONSE } from '../data/mockCase';
 import type { NoteHighlight } from '../data/mockCase';
+import type { ApiCriterionAssessment, ApiPolicyCriterion } from '../api/client';
 
 type Props = {
   hasClarification: boolean;
   onPhraseClick: (sourceId: string, excerpt?: string) => void;
+  noteText?: string;
+  noteSourceId?: string;
+  assessments?: ApiCriterionAssessment[];
+  criteria?: ApiPolicyCriterion[];
 };
 
 type Segment = { text: string; highlight?: NoteHighlight };
@@ -35,6 +40,30 @@ function buildSegments(text: string, globalOffset: number, highlights: NoteHighl
   }
 
   return segments;
+}
+
+function deriveHighlights(
+  assessments: ApiCriterionAssessment[],
+  criteria: ApiPolicyCriterion[],
+  noteSourceId: string,
+): NoteHighlight[] {
+  const labelMap = Object.fromEntries(criteria.map((c) => [c.criterion_id, c.label]));
+  const highlights: NoteHighlight[] = [];
+  for (const a of assessments) {
+    for (const ev of a.evidence) {
+      if (ev.source_id === noteSourceId && ev.span) {
+        highlights.push({
+          id: ev.evidence_id,
+          start: ev.span.start,
+          end: ev.span.end,
+          criterionId: a.criterion_id,
+          sourceId: ev.source_id,
+          label: `${a.criterion_id}: ${labelMap[a.criterion_id] ?? a.criterion_id}`,
+        });
+      }
+    }
+  }
+  return highlights.sort((a, b) => a.start - b.start);
 }
 
 function Noteparagraph({
@@ -73,8 +102,23 @@ function Noteparagraph({
   );
 }
 
-export default function AbridgeNotePanel({ hasClarification, onPhraseClick }: Props) {
-  const paragraphs = NOTE_TEXT.split('\n\n');
+export default function AbridgeNotePanel({ hasClarification, onPhraseClick, noteText, noteSourceId, assessments, criteria }: Props) {
+  const activeNoteText = noteText ?? NOTE_TEXT;
+
+  // Derive highlights from live assessments when available
+  const highlights =
+    assessments && criteria && noteSourceId
+      ? deriveHighlights(assessments, criteria, noteSourceId)
+      : NOTE_HIGHLIGHTS;
+
+  // Find recorded clarification from live data
+  const clarificationText = hasClarification
+    ? (assessments?.flatMap((a) => a.evidence).find(
+        (ev) => ev.source_type === 'clinician_clarification'
+      )?.excerpt ?? CLARIFICATION_RESPONSE)
+    : null;
+
+  const paragraphs = activeNoteText.split('\n\n');
   let offset = 0;
 
   return (
@@ -112,18 +156,18 @@ export default function AbridgeNotePanel({ hasClarification, onPhraseClick }: Pr
               key={i}
               text={para}
               globalOffset={go}
-              highlights={NOTE_HIGHLIGHTS}
+              highlights={highlights}
               onPhraseClick={onPhraseClick}
             />
           );
         })}
 
-        {hasClarification && (
+        {hasClarification && clarificationText && (
           <section className="note-section note-section--clarification animate-fade-in">
             <div className="note-section-label">
-              <span className="clarification-badge">Clinician Clarification Added — clar-001</span>
+              <span className="clarification-badge">Clinician Clarification Added</span>
             </div>
-            <p className="note-text note-clarification-text">{CLARIFICATION_RESPONSE}</p>
+            <p className="note-text note-clarification-text">{clarificationText}</p>
           </section>
         )}
 

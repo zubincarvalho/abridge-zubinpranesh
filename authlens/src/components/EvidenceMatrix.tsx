@@ -5,10 +5,13 @@ import {
   READINESS_INITIAL,
   READINESS_POST_CLARIFICATION,
 } from '../data/mockCase';
+import type { ApiCriterionAssessment, ApiPolicyCriterion } from '../api/client';
 
 type Props = {
   hasClarification: boolean;
   onSourceClick: (sourceId: string, excerpt?: string) => void;
+  assessments?: ApiCriterionAssessment[];
+  criteria?: ApiPolicyCriterion[];
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -30,11 +33,26 @@ const SOURCE_TYPE_LABEL: Record<string, string> = {
   payer_policy: 'Payer policy',
 };
 
-export default function EvidenceMatrix({ hasClarification, onSourceClick }: Props) {
-  const readiness = hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL;
+export default function EvidenceMatrix({ hasClarification, onSourceClick, assessments: liveAssessments, criteria: liveCriteria }: Props) {
+  // Use live data when available, fall back to mock constants
+  const activeAssessments = liveAssessments ?? ASSESSMENTS;
+  const activeCriteria    = liveCriteria    ?? POLICY_CRITERIA;
+
+  // Derive readiness counts from actual assessments (not pre-computed summaries)
+  const counts = activeAssessments.reduce(
+    (acc, a) => {
+      const st = liveAssessments ? a.status : (hasClarification ? (a as any).status_after ?? a.status : a.status);
+      acc[st] = (acc[st] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+  const readiness = liveAssessments
+    ? { criteria_met: counts.met ?? 0, criteria_weak: counts.weak ?? 0, criteria_missing: counts.missing ?? 0 }
+    : (hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL);
 
   const criteriaMap = Object.fromEntries(
-    POLICY_CRITERIA.map((c) => [c.criterion_id, c])
+    activeCriteria.map((c) => [c.criterion_id, c])
   );
 
   const statusLine = [
@@ -64,9 +82,14 @@ export default function EvidenceMatrix({ hasClarification, onSourceClick }: Prop
             </tr>
           </thead>
           <tbody>
-            {ASSESSMENTS.map((a) => {
-              const status = hasClarification ? a.status_after : a.status;
-              const evidence = hasClarification ? a.evidence_after : a.evidence;
+            {activeAssessments.map((a) => {
+              // Live data is always current state; mock data has status_after
+              const status = liveAssessments
+                ? a.status
+                : (hasClarification ? ((a as any).status_after ?? a.status) : a.status);
+              const evidence = liveAssessments
+                ? a.evidence
+                : (hasClarification ? ((a as any).evidence_after ?? a.evidence) : a.evidence);
               const firstEv = evidence[0];
               const criterion = criteriaMap[a.criterion_id];
 

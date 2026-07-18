@@ -33,7 +33,7 @@ from app.ports import CaseRepository, EvidenceMapper, GapDetector, LLMProvider, 
 logger = logging.getLogger("authlens.integration")
 
 CORS_ORIGINS_ENV_VAR = "AUTHLENS_CORS_ORIGINS"
-DEFAULT_CORS_ORIGINS = ("http://localhost:3000", "http://localhost:5173")
+DEFAULT_CORS_ORIGINS = ("http://localhost:3000", "http://localhost:5173", "http://localhost:5175", "http://localhost:5176")
 LLM_MODE_ENV_VAR = "AUTHLENS_LLM_MODE"
 
 ProviderMode = Literal["live", "deterministic"]
