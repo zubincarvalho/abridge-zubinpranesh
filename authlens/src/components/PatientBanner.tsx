@@ -10,7 +10,7 @@ const ACTIVITY_TABS = [
   { id: 'results', label: 'Results' },
   { id: 'notes',   label: 'Clinical Notes' },
   { id: 'orders',  label: 'Orders' },
-  { id: 'pa',      label: 'Prior Auth Assistant', active: true },
+  { id: 'pa',      label: 'Authorization Review', active: true },
 ];
 
 export default function PatientBanner({ hasRunAnalysis, hasClarification }: Props) {
@@ -25,7 +25,7 @@ export default function PatientBanner({ hasRunAnalysis, hasClarification }: Prop
       {/* Epic chrome bar — app-level navigation */}
       <div className="epic-chrome">
         <div className="epic-chrome-left">
-          <span className="epic-wordmark">epic</span>
+          <span className="epic-wordmark">EHR Sandbox</span>
           <span className="epic-sep">›</span>
           <span className="epic-breadcrumb">Encounters</span>
           <span className="epic-sep">›</span>

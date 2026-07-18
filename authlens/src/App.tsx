@@ -2,28 +2,27 @@ import { useState } from 'react';
 import './index.css';
 import './App.css';
 
-import PatientBanner     from './components/PatientBanner';
-import EHRNavigation     from './components/EHRNavigation';
-import OrderContextPanel from './components/OrderContextPanel';
-import AbridgeNotePanel  from './components/AbridgeNotePanel';
-import AgentTimeline     from './components/AgentTimeline';
-import EvidenceMatrix    from './components/EvidenceMatrix';
+import PatientBanner      from './components/PatientBanner';
+import EHRNavigation      from './components/EHRNavigation';
+import OrderContextPanel  from './components/OrderContextPanel';
+import AbridgeNotePanel   from './components/AbridgeNotePanel';
+import AgentTimeline      from './components/AgentTimeline';
+import EvidenceMatrix     from './components/EvidenceMatrix';
 import GapResolutionPanel from './components/GapResolutionPanel';
 import PriorAuthFormDraft from './components/PriorAuthFormDraft';
-import DisclosurePanel   from './components/DisclosurePanel';
-import SourceDrawer      from './components/SourceDrawer';
+import PacketStatusPanel  from './components/PacketStatusPanel';
+import SourceDrawer       from './components/SourceDrawer';
 
 type CenterTab = 'evidence' | 'note' | 'agents';
-type RightTab  = 'form'     | 'disclosure';
 
 type SelectedSource = { sourceId: string; excerpt?: string };
 
 export default function App() {
-  const [hasRunAnalysis,  setHasRunAnalysis]  = useState(false);
+  const [hasRunAnalysis,   setHasRunAnalysis]   = useState(false);
   const [hasClarification, setHasClarification] = useState(false);
-  const [selectedSource,  setSelectedSource]  = useState<SelectedSource | undefined>();
-  const [centerTab, setCenterTab] = useState<CenterTab>('evidence');
-  const [rightTab,  setRightTab]  = useState<RightTab>('form');
+  const [selectedSource,   setSelectedSource]   = useState<SelectedSource | undefined>();
+  const [centerTab,        setCenterTab]         = useState<CenterTab>('evidence');
+  const [showFormDrawer,   setShowFormDrawer]   = useState(false);
 
   function handleCheckReadiness() {
     setHasRunAnalysis(true);
@@ -33,7 +32,6 @@ export default function App() {
   function handleAddClarification() {
     setHasClarification(true);
     setCenterTab('evidence');
-    setRightTab('form');
   }
 
   function handleSourceClick(sourceId: string, excerpt?: string) {
@@ -55,12 +53,12 @@ export default function App() {
           <div className="pa-activity-bar">
             <div className="pa-activity-title">
               <span className="pa-activity-icon">⚡</span>
-              Prior Authorization Assistant
-              <span className="pa-activity-model">AuthLens · Abridge AI</span>
+              Authorization Review
+              <span className="pa-activity-model">AuthLens · Hackathon prototype using Abridge-provided synthetic data</span>
             </div>
             <div className="pa-activity-meta">
               <span className="chip chip-gray">MHP-IMG-2201</span>
-              <span className="chip chip-purple">CPT 72148</span>
+              <span className="chip chip-gray">CPT 72148</span>
               <span className="pa-synthetic-tag">SYNTHETIC DATA</span>
             </div>
           </div>
@@ -85,9 +83,9 @@ export default function App() {
                   <div className="pa-col-tabs">
                     {(
                       [
-                        { key: 'evidence', label: 'Evidence Checklist' },
-                        { key: 'note',     label: 'Note View'          },
-                        { key: 'agents',   label: 'Agent Log'          },
+                        { key: 'evidence', label: 'Evidence'  },
+                        { key: 'note',     label: 'Note View' },
+                        { key: 'agents',   label: 'Activity'  },
                       ] as { key: CenterTab; label: string }[]
                     ).map(({ key, label }) => (
                       <button
@@ -148,52 +146,13 @@ export default function App() {
               )}
             </section>
 
-            {/* ── Right column: Auth form + Disclosure ── */}
+            {/* ── Right column: Packet status ── */}
             <aside className="pa-col pa-col-right">
-              {hasRunAnalysis ? (
-                <>
-                  <div className="pa-col-tabs">
-                    {(
-                      [
-                        { key: 'form',        label: 'Auth Form'   },
-                        { key: 'disclosure',  label: 'Disclosure'  },
-                      ] as { key: RightTab; label: string }[]
-                    ).map(({ key, label }) => (
-                      <button
-                        key={key}
-                        className={`pa-col-tab${rightTab === key ? ' pa-col-tab--active' : ''}`}
-                        onClick={() => setRightTab(key)}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="pa-col-body">
-                    {rightTab === 'form' && (
-                      <div className="pa-col-content animate-fade-in">
-                        <PriorAuthFormDraft
-                          hasClarification={hasClarification}
-                          onSourceClick={handleSourceClick}
-                        />
-                      </div>
-                    )}
-                    {rightTab === 'disclosure' && (
-                      <div className="pa-col-content animate-fade-in">
-                        <DisclosurePanel onSourceClick={handleSourceClick} />
-                      </div>
-                    )}
-                  </div>
-                </>
-              ) : (
-                <div className="pa-right-idle">
-                  <div className="pa-right-idle-icon">📄</div>
-                  <div className="pa-right-idle-title">Auth Packet</div>
-                  <div className="pa-right-idle-body">
-                    AuthLens will draft the authorization packet once evidence retrieval is complete.
-                  </div>
-                </div>
-              )}
+              <PacketStatusPanel
+                hasRunAnalysis={hasRunAnalysis}
+                hasClarification={hasClarification}
+                onOpenForm={() => setShowFormDrawer(true)}
+              />
             </aside>
           </div>
         </main>
@@ -205,6 +164,23 @@ export default function App() {
           excerpt={selectedSource.excerpt}
           onClose={() => setSelectedSource(undefined)}
         />
+      )}
+
+      {showFormDrawer && (
+        <div className="form-drawer-overlay" onClick={() => setShowFormDrawer(false)}>
+          <div className="form-drawer" onClick={(e) => e.stopPropagation()}>
+            <div className="form-drawer-header">
+              <span className="form-drawer-title">Authorization Form Draft</span>
+              <button className="form-drawer-close" onClick={() => setShowFormDrawer(false)}>✕</button>
+            </div>
+            <div className="form-drawer-body">
+              <PriorAuthFormDraft
+                hasClarification={hasClarification}
+                onSourceClick={handleSourceClick}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

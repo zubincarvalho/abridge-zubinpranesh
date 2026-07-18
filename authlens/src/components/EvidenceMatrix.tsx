@@ -12,9 +12,9 @@ type Props = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  met: 'Met',
-  weak: 'Weak',
-  missing: 'Missing',
+  met: 'Supported',
+  weak: 'Needs clarification',
+  missing: 'Not supported',
 };
 const STATUS_CLS: Record<string, string> = {
   met: 'chip-met',
@@ -23,47 +23,32 @@ const STATUS_CLS: Record<string, string> = {
 };
 
 const SOURCE_TYPE_LABEL: Record<string, string> = {
-  encounter_note: 'Encounter Note',
+  encounter_note: 'Encounter note',
   encounter_transcript: 'Transcript',
-  fhir_resource: 'FHIR',
-  clinician_clarification: 'Clarification',
+  fhir_resource: 'Clinical data',
+  clinician_clarification: 'Clinician clarification',
+  payer_policy: 'Payer policy',
 };
 
 export default function EvidenceMatrix({ hasClarification, onSourceClick }: Props) {
   const readiness = hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL;
-  const beforeScore = READINESS_INITIAL.score;
-  const afterScore = READINESS_POST_CLARIFICATION.score;
 
   const criteriaMap = Object.fromEntries(
     POLICY_CRITERIA.map((c) => [c.criterion_id, c])
   );
 
+  const statusLine = [
+    `${readiness.criteria_met} supported`,
+    readiness.criteria_weak > 0 ? `${readiness.criteria_weak} needs clarification` : null,
+    readiness.criteria_missing > 0 ? `${readiness.criteria_missing} not supported` : null,
+  ].filter(Boolean).join(' · ');
+
   return (
     <div className="evidence-matrix panel">
       <div className="panel-header">
         <div className="matrix-header-left">
-          <span className="panel-header-title">Authorization Readiness</span>
-          <span className="matrix-policy-ref">
-            Meridian Health Plans (fictional) · MHP-IMG-2201 · {readiness.criteria_met} met /{' '}
-            {readiness.criteria_weak} weak / {readiness.criteria_missing} missing
-          </span>
-        </div>
-        <div className="matrix-scores">
-          <div className="matrix-score-item">
-            <span className="matrix-score-label">Before clarification</span>
-            <span className="matrix-score-value matrix-score-before">{beforeScore}%</span>
-          </div>
-          <div className="matrix-score-arrow">→</div>
-          <div className="matrix-score-item">
-            <span className="matrix-score-label">After clarification</span>
-            <span
-              className={`matrix-score-value ${
-                hasClarification ? 'matrix-score-after' : 'matrix-score-after-dim'
-              }`}
-            >
-              {afterScore}%
-            </span>
-          </div>
+          <span className="panel-header-title">Evidence</span>
+          <span className="matrix-policy-ref">{statusLine} — MHP-IMG-2201</span>
         </div>
       </div>
 

@@ -13,46 +13,6 @@
   color: var(--text-muted);
 }
 
-.matrix-scores {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #f8fafc;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-md);
-  padding: 6px 14px;
-}
-
-.matrix-score-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-}
-
-.matrix-score-label {
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-}
-
-.matrix-score-value {
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.matrix-score-before { color: #d97706; }
-.matrix-score-after { color: #15803d; transition: color 0.4s; }
-.matrix-score-after-dim { color: #9ca3af; }
-
-.matrix-score-arrow {
-  font-size: 18px;
-  color: #c5cdd6;
-  font-weight: 300;
-}
 
 .matrix-table-wrap {
   overflow-x: auto;

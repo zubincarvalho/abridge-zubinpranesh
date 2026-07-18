@@ -2,8 +2,6 @@ import './OrderContextPanel.css';
 import {
   CHART_ITEMS,
   ASSESSMENTS,
-  READINESS_INITIAL,
-  READINESS_POST_CLARIFICATION,
 } from '../data/mockCase';
 
 type Props = {
@@ -29,11 +27,6 @@ export default function OrderContextPanel({
   onCheckReadiness,
   onAddClarification,
 }: Props) {
-  const readiness = hasClarification ? READINESS_POST_CLARIFICATION : READINESS_INITIAL;
-  const scoreColor =
-    readiness.score >= 90 ? '#15803d' :
-    readiness.score >= 75 ? '#c07000' : '#b91c1c';
-
   const statusCounts = hasRunAnalysis
     ? ASSESSMENTS.reduce(
         (acc, a) => {
@@ -84,49 +77,28 @@ export default function OrderContextPanel({
             </button>
           </div>
         ) : (
-          <div className="ocp-status animate-fade-in">
-            <div className="ocp-score-row">
-              <span className="ocp-score" style={{ color: scoreColor }}>
-                {readiness.score}%
-              </span>
-              <div className="ocp-score-meta">
-                <span className="ocp-score-label">Readiness</span>
-                <span className={`chip ${
-                  readiness.overall_denial_risk === 'high'   ? 'chip-missing' :
-                  readiness.overall_denial_risk === 'medium' ? 'chip-weak'    : 'chip-met'
-                }`}>
-                  {readiness.overall_denial_risk} denial risk
-                </span>
-              </div>
-            </div>
-
-            <div className="score-bar-track ocp-score-bar">
-              <div
-                className="score-bar-fill"
-                style={{ width: `${readiness.score}%`, background: scoreColor }}
-              />
-            </div>
-
+          <div className="ocp-summary animate-fade-in">
             {statusCounts && (
-              <div className="ocp-criteria-row">
-                {statusCounts.met    != null && <span className="chip chip-met">{statusCounts.met} met</span>}
-                {statusCounts.weak   != null && <span className="chip chip-weak">{statusCounts.weak} weak</span>}
-                {statusCounts.missing != null && statusCounts.missing > 0 && (
-                  <span className="chip chip-missing">{statusCounts.missing} missing</span>
+              <>
+                <div className="ocp-summary-met">
+                  {statusCounts.met ?? 0} of 7 requirements supported
+                </div>
+                {(statusCounts.weak ?? 0) > 0 && (
+                  <div className="ocp-summary-item ocp-summary-weak">
+                    {statusCounts.weak} needs clarification
+                  </div>
                 )}
-              </div>
-            )}
-
-            {!hasClarification && (
-              <button className="btn btn-teal ocp-action-btn" onClick={onAddClarification}>
-                Add Clarification
-              </button>
-            )}
-
-            {hasClarification && (
-              <div className="ocp-ready-banner">
-                <span>✓</span> Ready for Human Review
-              </div>
+                {(statusCounts.missing ?? 0) > 0 && (
+                  <div className="ocp-summary-item ocp-summary-missing">
+                    {statusCounts.missing} not supported
+                  </div>
+                )}
+                {!hasClarification && (
+                  <button className="ocp-clinician-link" onClick={onAddClarification}>
+                    Needs clinician input →
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}

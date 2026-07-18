@@ -389,11 +389,11 @@ export const ASSESSMENTS: CriterionAssessment[] = [
   },
   {
     criterion_id: "LM-3",
-    status: "missing",
+    status: "weak",
     status_after: "met",
-    denial_risk: "high",
+    denial_risk: "medium",
     rationale:
-      "The record shows an NSAID on the medication list and a physical-therapy referral, but neither establishes that six weeks of conservative treatment were completed without sufficient improvement.",
+      "The record documents an NSAID on the medication list and a physical-therapy referral, but neither confirms that conservative treatment was completed without sufficient improvement. Clinician clarification is needed to satisfy this criterion.",
     evidence: [
       {
         evidence_id: "ev-lm3-med",
@@ -541,11 +541,11 @@ export const ASSESSMENTS: CriterionAssessment[] = [
   },
   {
     criterion_id: "LM-6",
-    status: "weak",
-    status_after: "weak",
-    denial_risk: "medium",
+    status: "met",
+    status_after: "met",
+    denial_risk: "low",
     rationale:
-      "Work and sleep impact are mentioned, but the limitation is not characterized in enough detail (frequency, severity) to fully satisfy the criterion.",
+      "The note documents specific functional impacts attributable to the symptoms: difficulty sitting through a full workday and interrupted sleep due to pain. These constitute documented functional limitations sufficient to satisfy this criterion.",
     evidence: [
       {
         evidence_id: "ev-lm6-note",
@@ -613,24 +613,24 @@ export const ASSESSMENTS: CriterionAssessment[] = [
 
 export const READINESS_INITIAL: ReadinessSummary = {
   label: "initial",
-  score: 79,
-  criteria_met: 5,
-  criteria_weak: 1,
-  criteria_missing: 1,
-  criteria_conflicting: 0,
-  criteria_not_applicable: 0,
-  overall_denial_risk: "high",
-};
-
-export const READINESS_POST_CLARIFICATION: ReadinessSummary = {
-  label: "post_clarification",
-  score: 93,
+  score: 86,
   criteria_met: 6,
   criteria_weak: 1,
   criteria_missing: 0,
   criteria_conflicting: 0,
   criteria_not_applicable: 0,
   overall_denial_risk: "medium",
+};
+
+export const READINESS_POST_CLARIFICATION: ReadinessSummary = {
+  label: "post_clarification",
+  score: 100,
+  criteria_met: 7,
+  criteria_weak: 0,
+  criteria_missing: 0,
+  criteria_conflicting: 0,
+  criteria_not_applicable: 0,
+  overall_denial_risk: "low",
 };
 
 // ── Clarification Q&A ──────────────────────────────────────────────────────
@@ -765,8 +765,8 @@ export const EVENTS_PRE_CLARIFICATION: AgentEvent[] = [
     sequence: 5,
     stage: "gap_detection",
     status: "completed",
-    title: "Classified criteria: 5 met, 1 weak, 1 missing (LM-3 conservative therapy)",
-    detail: "Referral and prescription found but neither proves completed/failed therapy.",
+    title: "Classified criteria: 6 supported, 1 needs clarification (LM-3 conservative therapy)",
+    detail: "Referral and prescription found but neither confirms completion and failure of conservative treatment.",
     related_ids: ["LM-3", "LM-6"],
     occurred_at: "2026-07-18T16:04:00Z",
   },
@@ -801,7 +801,7 @@ export const EVENTS_POST_CLARIFICATION: AgentEvent[] = [
     sequence: 8,
     stage: "gap_detection",
     status: "completed",
-    title: "Re-evaluated criteria after clarification: 6 met, 1 weak, 0 missing; readiness 79 → 93",
+    title: "Re-evaluated criteria after clarification: all 7 supported; authorization packet updated",
     detail: null,
     related_ids: ["LM-3"],
     occurred_at: "2026-07-18T16:11:00Z",
@@ -887,7 +887,7 @@ export const CHART_ITEMS: ChartItem[] = [
     category: "referral",
     display: "Referral to physical therapy",
     // SNOMED 91251008 (Physical therapy procedure); ServiceRequest.intent = proposal
-    detail: "SNOMED 91251008 · Referral present; completion not documented — key LM-3 gap",
+    detail: "SNOMED 91251008 · Referral present; completion not yet confirmed — LM-3 awaiting clinician clarification",
   },
   {
     source_id: "fhir-sr-mri-001",
