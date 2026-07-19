@@ -100,6 +100,135 @@
 .agent-step--completed .agent-step-num { color: #15803d; }
 .agent-step--failed .agent-step-num { color: #b91c1c; }
 
+/* ── Live "agents running" progression ──────────────────────────────────── */
+.chip-running {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #eef2ff;
+  color: #4338ca;
+  border: 1px solid #c7d2fe;
+}
+.agent-run-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #4f46e5;
+  animation: agent-pulse 1s ease-in-out infinite;
+}
+@keyframes agent-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.7); }
+}
+
+.agent-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #c7d2fe;
+  border-top-color: #4f46e5;
+  border-radius: 50%;
+  animation: agent-spin 0.7s linear infinite;
+}
+@keyframes agent-spin { to { transform: rotate(360deg); } }
+
+/* the agent currently working gets a soft highlighted ring */
+.agent-step--started .agent-step-icon {
+  background: #eef2ff;
+  border-color: #818cf8;
+  box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.18);
+}
+.agent-step--started .agent-step-label { color: #4338ca; }
+
+/* queued/pending agents are dimmed until their turn */
+.agent-step--pending { opacity: 0.5; }
+.agent-step--pending .agent-step-detail { color: #9aa0b4; }
+
+.agent-chip-running { background: #eef2ff; color: #4338ca; }
+
+/* ── Per-agent proof of completion ──────────────────────────────────────── */
+.agent-proof {
+  margin: 6px 0 2px;
+  background: #f5faf6;
+  border: 1px solid #cdebd4;
+  border-left: 3px solid #16a34a;
+  border-radius: 6px;
+  padding: 7px 10px;
+}
+.agent-proof--bad {
+  background: #fef4f4;
+  border-color: #f4cccc;
+  border-left-color: #dc2626;
+}
+.agent-proof-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #15803d;
+}
+.agent-proof--bad .agent-proof-label { color: #b91c1c; }
+.agent-proof-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #16a34a;
+  color: #fff;
+  font-size: 9px;
+}
+.agent-proof--bad .agent-proof-check { background: #dc2626; }
+.agent-proof-body {
+  font-size: 12px;
+  color: #22243a;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.proof-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.proof-chip {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #4338ca;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+.proof-quote {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-style: italic;
+  font-size: 12px;
+  color: #22243a;
+  background: #fff;
+  border: 1px solid #cfe8d6;
+  border-radius: 5px;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+.proof-quote:hover { border-color: #16a34a; background: #f0fbf3; }
+.proof-quote-arrow { color: #16a34a; font-style: normal; font-weight: 700; }
+
+.proof-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+.proof-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+.proof-pill--met { background: #dcfce7; color: #15803d; }
+.proof-pill--weak { background: #fef9c3; color: #a16207; }
+.proof-pill--missing { background: #fee2e2; color: #b91c1c; }
+.proof-pill--score { background: #ede9fe; color: #6d28d9; }
+.proof-sub { font-size: 11px; color: #55556f; margin-top: 5px; }
+
 /* Vertical connector line between steps */
 .agent-connector {
   position: absolute;

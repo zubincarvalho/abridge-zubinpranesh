@@ -8,6 +8,7 @@ chain-of-thought, prompts, or raw completions (see
 docs/SAFETY_AND_HUMAN_REVIEW.md rule 9).
 """
 
+import threading
 from collections.abc import Callable, Iterable
 from datetime import datetime, timezone
 
@@ -26,6 +27,22 @@ class EventRecorder:
 
     def __init__(self, clock: Callable[[], datetime] | None = None) -> None:
         self._clock = clock or utc_now
+        # Optional per-thread progress sink: when set, every recorded event is
+        # also handed to the callback so the API can stream live per-agent
+        # progress. Thread-local so concurrent runs never cross streams.
+        self._sink = threading.local()
+
+    def set_sink(self, callback: "Callable[[AgentEvent], None] | None") -> None:
+        """Set (or clear) the live event sink for the CURRENT thread only."""
+        self._sink.callback = callback
+
+    def _emit(self, event: AgentEvent) -> None:
+        callback = getattr(self._sink, "callback", None)
+        if callback is not None:
+            try:
+                callback(event)
+            except Exception:  # a broken stream must never break the workflow
+                pass
 
     def record(
         self,
@@ -51,6 +68,7 @@ class EventRecorder:
             occurred_at=self._clock(),
         )
         case.events.append(event)
+        self._emit(event)
         return event
 
     def started(

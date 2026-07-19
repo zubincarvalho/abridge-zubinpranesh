@@ -1,0 +1,107 @@
+.readiness-gauge {
+  background: #fff;
+  border: 1px solid var(--border, #e4e4ee);
+  border-radius: 12px;
+  padding: 16px 16px 14px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(20, 20, 50, 0.05);
+}
+
+.rg-header { margin-bottom: 6px; }
+.rg-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted, #8a8aa0);
+}
+
+.rg-dial-wrap {
+  position: relative;
+  width: 128px;
+  height: 128px;
+  margin: 4px auto 2px;
+}
+.rg-dial { transform: rotate(-90deg); }
+.rg-track {
+  fill: none;
+  stroke: #eef0f5;
+  stroke-width: 11;
+}
+.rg-progress {
+  fill: none;
+  stroke-width: 11;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.4s;
+}
+.readiness-gauge--high .rg-progress { stroke: #16a34a; }
+.readiness-gauge--mid  .rg-progress { stroke: #d97706; }
+.readiness-gauge--low  .rg-progress { stroke: #dc2626; }
+
+.rg-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+}
+.rg-score {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--text-primary, #14143a);
+  font-variant-numeric: tabular-nums;
+}
+.readiness-gauge--high .rg-score { color: #15803d; }
+.readiness-gauge--mid  .rg-score { color: #b45309; }
+.readiness-gauge--low  .rg-score { color: #b91c1c; }
+.rg-outof { font-size: 11px; color: var(--text-muted, #8a8aa0); margin-top: 2px; }
+
+.rg-delta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0 4px;
+}
+.rg-delta-badge {
+  font-size: 12px;
+  font-weight: 800;
+  color: #15803d;
+  background: #dcfce7;
+  border-radius: 10px;
+  padding: 1px 8px;
+  animation: rg-pop 0.5s ease;
+}
+@keyframes rg-pop {
+  0% { transform: scale(0.6); opacity: 0; }
+  60% { transform: scale(1.15); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.rg-delta-text { font-size: 11px; color: var(--text-secondary, #55556f); }
+
+.rg-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.rg-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+.rg-pill--met { background: #dcfce7; color: #15803d; }
+.rg-pill--weak { background: #fef9c3; color: #a16207; }
+.rg-pill--missing { background: #fee2e2; color: #b91c1c; }
+
+.rg-foot {
+  font-size: 10px;
+  color: var(--text-muted, #8a8aa0);
+  margin-top: 10px;
+  line-height: 1.4;
+}

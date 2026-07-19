@@ -1,61 +1,169 @@
 # AuthLens
 
-**Point-of-capture prior authorization readiness agent** — a backend-first
-healthcare AI hackathon project built downstream of an Abridge-style
-encounter note.
+**Prior authorization readiness, at the point of capture.**
 
-AuthLens checks the encounter documentation against a payer's
-medical-necessity policy *while the patient is still in the room*: it parses
-the policy into discrete criteria, maps each criterion to exact cited
-evidence in the note/transcript/FHIR chart, classifies gaps, asks the
-clinician precise clarification questions, and produces a verified,
-source-grounded prior authorization packet and mock form — stopping at
-**Ready for Clinician Review**. It never diagnoses, never recommends
-treatment, never predicts approval, and never submits anything.
+AuthLens checks encounter documentation against a payer's medical-necessity
+policy *while the patient is still in the room* — downstream of an
+Abridge-style ambient note.
 
-> All patient, clinician, and payer data in this repository is
-> **hackathon-authored synthetic data** (see `data/` and ADR 0004).
+It parses the policy into discrete criteria, maps each one to a **verbatim
+cited excerpt** from the note, transcript, or FHIR chart, classifies what's
+missing, asks the clinician one precise question, and produces a verified,
+source-grounded PA packet and mock form — stopping at **Ready for Clinician
+Review**.
 
-## Demo scenario
+It never diagnoses, never recommends treatment, never predicts payer
+approval, and **never submits anything**.
 
-Lumbar-spine MRI (CPT 72148) for chronic low back pain with radicular
-symptoms. The chart shows an NSAID and a PT referral — but the payer policy
-requires *completed and failed* conservative therapy. AuthLens flags the gap,
-asks one question, and readiness rises from 79 to 93 after the clinician's
-answer. Full walkthrough: `docs/PRODUCT_SPEC.md`.
+> All patient, clinician, and payer data here is **hackathon-authored
+> synthetic data**. The payer "Meridian Health Plans" is fictional.
+> See `data/` and ADR 0004.
+
+---
+
+## The problem
+
+Prior auth happens days after the visit, in a back office, from a note the
+clinician has already moved on from. A missing line of documentation costs a
+week — and the one person who could have fixed it in five seconds was the
+physician who saw the patient.
+
+AuthLens moves that check to the moment the documentation is created.
+
+---
+
+## Run it in two minutes
+
+Two processes. **`DEMO_MODE=1` is required** — see the note below it.
+
+```bash
+# Terminal 1 — backend (http://localhost:8000)
+cd backend
+uv sync
+DEMO_MODE=1 uv run uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 — frontend (http://localhost:5173)
+cd authlens
+npm install
+npm run dev
+```
+
+Open **http://localhost:5173**, pick the *Lumbar MRI — Conservative Therapy
+Gap* scenario, and click **Run Analysis**.
+
+> ⚠️ **Always set `DEMO_MODE=1`.** Provider mode is resolved by the *presence*
+> of `ANTHROPIC_API_KEY`, not its validity — so a stale or unfunded key in
+> your environment silently selects live mode and the pipeline fails at the
+> first LLM stage. Deterministic mode needs no key and is fully reproducible.
+> Live mode is an explicit opt-in (`AUTHLENS_LLM_MODE=live` + a funded key)
+> and never silently falls back to the mock.
+
+---
+
+## What you'll see
+
+The demo case: **lumbar-spine MRI (CPT 72148)** for chronic low back pain with
+radicular symptoms, against policy **MHP-IMG-2201**.
+
+1. **The agent timeline streams live.** Each agent reports its own
+   proof-of-work — criteria parsed, excerpts cited, criteria assessed.
+2. **The evidence matrix** shows all 7 criteria. Every clinical claim carries a
+   verbatim quote with a character span. Click any citation to jump to the
+   exact highlighted text in the note.
+3. **Six of seven criteria are met — one is not.** The chart shows an NSAID
+   and a *PT referral*, but the policy requires *completed and failed*
+   conservative therapy. A referral is not proof of completed therapy, so
+   AuthLens will not infer it.
+4. **It asks one question.** The clinician answers, and readiness rises from
+   **79 → 93**.
+5. **Packet drafted, independently verified, form populated — then it stops.**
+   `ready_for_review` is terminal.
+
+---
+
+## The agents
+
+An 11-stage pipeline orchestrated over frozen ports. Seven stages are
+LLM-backed agents (`app/agents/`); `form_drafting` is a deterministic service:
+
+| Stage | Agent | Does |
+|---|---|---|
+| `policy_parsing` | Policy Agent | Splits the payer policy into discrete, checkable criteria |
+| `evidence_retrieval` | Evidence Retrieval Agent | Pulls candidate spans from note, transcript, FHIR chart |
+| `evidence_mapping` | Evidence Mapper Agent | Binds each criterion to verbatim excerpts + spans |
+| `gap_detection` | Gap & Readiness Agent | Classifies met / weak / missing; scores readiness |
+| `disclosure_review` | Disclosure Agent | Minimum-necessary review — unrelated PHI excluded by default |
+| `packet_generation` | Packet Agent | Assembles the source-grounded PA packet |
+| `verification` | Verification Agent | Independently re-checks every claim against its citation |
+| `form_drafting` | Form Agent | Populates the mock payer form |
+
+`intake`, `clarification`, and `human_review` are the three non-agent stages.
+
+---
+
+## Safety posture
+
+These are enforced in code and covered by tests, not just documented:
+
+- **No autonomous submission.** There is no submission endpoint and no
+  `submitted` state. `ready_for_review` is terminal.
+- **No diagnosis, no treatment recommendation, no approval prediction.**
+- **Source-grounded or absent.** Every clinical claim cites evidence; every
+  excerpt is a verbatim quote with a span. When evidence is missing, the
+  output is `missing` + a clarification question — never an inference.
+- **A referral is never proof of completed therapy**; a prescription is never
+  proof of treatment failure (at most `weak` support).
+- **No chain-of-thought is ever logged** — not in events, logs, artifacts, or
+  test snapshots.
+- **Minimum necessary.** Unrelated PHI is excluded by default; packet content
+  requires an explicit INCLUDE disclosure decision.
+
+---
+
+## How it was built
+
+Seven Claude Code agents built the subsystems **in parallel** against frozen
+contracts and ports, then an integration agent wired them together.
+
+The contracts (`backend/app/contracts/`, `backend/app/ports/`, `contracts/`)
+were frozen *before* parallel work began and never edited during it — each
+agent coded against interfaces and local fakes, so the subsystems composed on
+first integration. See [`docs/PARALLEL_EXECUTION.md`](docs/PARALLEL_EXECUTION.md)
+and [`docs/INTEGRATION_REPORT.md`](docs/INTEGRATION_REPORT.md).
+
+```bash
+cd backend
+uv run pytest                  # 351 passed, 1 skipped (opt-in live LLM)
+uv run pytest tests/contracts  # 57 frozen contract & safety-invariant tests
+```
+
+---
 
 ## Repository layout
 
 ```
-CLAUDE.md              Rules for Claude Code agents (read before contributing)
-docs/                  Documentation (start at docs/README.md)
-contracts/             OpenAPI spec + validated example payloads (frontend contract)
+authlens/              React + Vite frontend
 backend/               FastAPI backend
   app/contracts/       Frozen Pydantic v2 contracts (authoritative schemas)
   app/ports/           Frozen component interfaces (Protocols)
-  app/config.py        Settings (Anthropic model, fixture paths)
+  app/agents/          Seven LLM-backed pipeline agents
+  app/services/        Deterministic services (readiness, form draft, ...)
+  app/orchestration/   Workflow orchestrator + state machine
+  app/providers/       LLM provider (deterministic mock / live Anthropic)
   tests/contracts/     Frozen contract & safety-invariant tests
-data/fixtures/         Synthetic demo case (frozen, hackathon-authored)
-data/policies/         Synthetic payer policy (frozen, hackathon-authored)
-synthetic-ambient-fhir-25/  Official Abridge synthetic dataset (READ-ONLY — never modify)
+contracts/             OpenAPI spec + validated example payloads
+data/fixtures/         Synthetic demo case (frozen)
+data/policies/         Synthetic payer policy (frozen)
+docs/                  Full documentation (start at docs/README.md)
+synthetic-ambient-fhir-25/   Official Abridge dataset (READ-ONLY)
+CLAUDE.md              Rules for Claude Code agents
 ```
 
-## Quick start
+---
 
-The backend is fully integrated. All commands run from `backend/`.
+## Driving it headlessly
 
-```bash
-cd backend
-uv sync                                    # install dependencies
-
-uv run pytest                              # full suite: 351 passed, 1 skipped
-uv run pytest tests/contracts              # 57 frozen contract & safety tests
-
-# Run the API in deterministic demo mode (reproducible; no API key needed):
-DEMO_MODE=1 uv run uvicorn app.main:app --reload --port 8000
-```
-
-Then drive the full demo (from another shell):
+The full demo without the UI:
 
 ```bash
 BASE=http://localhost:8000/api
@@ -70,19 +178,23 @@ curl -s -X POST $BASE/cases/$CID/verify > /dev/null                   # → veri
 curl -s -X POST $BASE/cases/$CID/form-draft | python -m json.tool     # → ready_for_review
 ```
 
-**Provider mode.** Deterministic mode (`DEMO_MODE=1`) is fully reproducible and
-requires no key. Live LLM mode is an explicit opt-in
-(`AUTHLENS_LLM_MODE=live` + `ANTHROPIC_API_KEY`); it never silently falls back
-to the mock — see [`docs/INTEGRATION_REPORT.md`](docs/INTEGRATION_REPORT.md).
-Realistic response payloads for the frontend live in
-[`docs/frontend_examples/`](docs/frontend_examples/).
+`POST /cases/{id}/run/stream` is the same pipeline as `/run`, streaming
+per-agent progress as NDJSON — this is what the UI timeline consumes.
+
+---
 
 ## Documentation
 
-Start at [`docs/README.md`](docs/README.md). Key entry points:
+Start at [`docs/README.md`](docs/README.md).
+
 [Product spec](docs/PRODUCT_SPEC.md) ·
 [Architecture](docs/SYSTEM_ARCHITECTURE.md) ·
 [API contract](docs/API_CONTRACT.md) ·
-[Frontend handoff](docs/FRONTEND_HANDOFF.md) ·
 [Safety & human review](docs/SAFETY_AND_HUMAN_REVIEW.md) ·
-[Parallel execution plan](docs/PARALLEL_EXECUTION.md)
+[Agent workflows](docs/AGENT_WORKFLOWS.md) ·
+[Parallel execution plan](docs/PARALLEL_EXECUTION.md) ·
+[Integration report](docs/INTEGRATION_REPORT.md) ·
+[Evaluation plan](docs/EVALUATION_PLAN.md) ·
+[Abridge dataset usage](docs/ABRIDGE_DATASET.md)
+</content>
+</invoke>

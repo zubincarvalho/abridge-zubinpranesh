@@ -24,10 +24,26 @@ def _operations(spec: dict) -> set[tuple[str, str]]:
     }
 
 
+# Additive, demo-only endpoints intentionally NOT part of the frozen core
+# contract (contracts/openapi.yaml stays exactly the 12 product endpoints,
+# enforced by tests/contracts/test_openapi.py). Any generated path beyond the
+# contract must be listed here explicitly — an unexpected endpoint still fails.
+KNOWN_DEMO_EXTRAS = {
+    ("/api/scenarios", "get"),
+    ("/api/cases/{case_id}/run/stream", "post"),
+}
+
+
 def test_generated_paths_match_contract_exactly(app):
     contract_ops = _operations(_contract_spec())
     generated_ops = _operations(app.openapi())
-    assert generated_ops == contract_ops
+    # Every frozen contract endpoint must be implemented...
+    assert contract_ops <= generated_ops, contract_ops - generated_ops
+    # ...and the only endpoints beyond the contract are the allow-listed
+    # demo-support endpoints (never an accidental/undocumented one).
+    assert generated_ops - contract_ops <= KNOWN_DEMO_EXTRAS, (
+        generated_ops - contract_ops - KNOWN_DEMO_EXTRAS
+    )
 
 
 def test_no_submission_endpoint_generated(app):

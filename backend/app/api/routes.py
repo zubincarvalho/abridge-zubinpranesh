@@ -5,7 +5,12 @@ submission endpoint and none may be added; ``ready_for_review`` is terminal
 (docs/SAFETY_AND_HUMAN_REVIEW.md rule 4).
 """
 
+import json
+import queue
+import threading
+
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 
 from app.api.case_service import CaseService
 from app.api.schemas import DemoScenario, HealthDetailsResponse
@@ -164,6 +169,58 @@ def run_analysis(
         case_id, (CaseStatus.INTAKE_READY,), "run the analysis pipeline"
     )
     return orchestrator.start_analysis(case_id)
+
+
+@router.post("/cases/{case_id}/run/stream", tags=["workflow"])
+def run_analysis_stream(
+    case_id: str,
+    service: CaseService = Depends(get_case_service),
+    orchestrator: WorkflowOrchestrator = Depends(get_workflow_orchestrator),
+) -> StreamingResponse:
+    """Run the analysis pipeline, streaming per-agent progress as NDJSON.
+
+    Same gating and semantics as ``POST /run`` (wrong state -> 409 before any
+    work starts). Emits one ``{"kind":"event","event":AgentEvent}`` line per
+    stage as it completes, then a final ``{"kind":"done","case":AuthLensCase}``.
+    """
+    # Pre-gate in the request thread so a wrong-state call returns a normal 409
+    # and never starts the background run.
+    service.ensure_status(
+        case_id, (CaseStatus.INTAKE_READY,), "run the analysis pipeline"
+    )
+
+    messages: "queue.Queue[dict | None]" = queue.Queue()
+
+    def on_event(event) -> None:
+        messages.put({"kind": "event", "event": event.model_dump(mode="json")})
+
+    def worker() -> None:
+        try:
+            case = orchestrator.start_analysis(case_id, on_event=on_event)
+            messages.put({"kind": "done", "case": case.model_dump(mode="json")})
+        except Exception as exc:  # surface a public, stream-safe error line
+            messages.put(
+                {
+                    "kind": "error",
+                    "error_code": getattr(exc, "error_code", "internal_error"),
+                    "message": str(exc) or "analysis failed",
+                }
+            )
+        finally:
+            messages.put(None)  # completion sentinel
+
+    threading.Thread(
+        target=worker, name=f"run-stream-{case_id}", daemon=True
+    ).start()
+
+    def generate():
+        while True:
+            message = messages.get()
+            if message is None:
+                break
+            yield json.dumps(message) + "\n"
+
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
 
 
 @router.post(

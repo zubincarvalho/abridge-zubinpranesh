@@ -287,6 +287,59 @@ export function runAnalysis(caseId: string): Promise<ApiCase> {
   return api<ApiCase>('POST', `/cases/${caseId}/run`);
 }
 
+/**
+ * Run analysis with live per-agent progress. Streams NDJSON from the backend,
+ * invoking `onEvent` for each AgentEvent as it completes, and resolves with the
+ * final case. Throws `StreamUnsupported` if the environment can't stream (the
+ * caller should fall back to `runAnalysis`).
+ */
+export class StreamUnsupported extends Error {}
+
+export async function runAnalysisStreamed(
+  caseId: string,
+  onEvent: (event: ApiAgentEvent) => void,
+): Promise<ApiCase> {
+  const res = await fetch(`${BASE}/cases/${caseId}/run/stream`, { method: 'POST' });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err?.message ?? `HTTP ${res.status}`);
+  }
+  if (!res.body) throw new StreamUnsupported('ReadableStream unavailable');
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let finalCase: ApiCase | null = null;
+
+  const handleLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const msg = JSON.parse(trimmed) as
+      | { kind: 'event'; event: ApiAgentEvent }
+      | { kind: 'done'; case: ApiCase }
+      | { kind: 'error'; message?: string };
+    if (msg.kind === 'event') onEvent(msg.event);
+    else if (msg.kind === 'done') finalCase = msg.case;
+    else if (msg.kind === 'error') throw new Error(msg.message ?? 'Analysis failed');
+  };
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buffer.indexOf('\n')) >= 0) {
+      const line = buffer.slice(0, nl);
+      buffer = buffer.slice(nl + 1);
+      handleLine(line);
+    }
+  }
+  if (buffer.trim()) handleLine(buffer);
+
+  if (!finalCase) throw new Error('Stream ended before the case was returned');
+  return finalCase;
+}
+
 export function submitClarification(
   caseId: string,
   questionId: string,

@@ -16,6 +16,9 @@ import type {
 type Props = {
   hasClarification: boolean;
   onSourceClick: (sourceId: string, excerpt?: string) => void;
+  /** Click-to-source: jump to the note and pulse the span (falls back to the
+   *  drawer for non-note sources). Defaults to onSourceClick when omitted. */
+  onFocusSource?: (sourceId: string, excerpt?: string) => void;
   assessments?: ApiCriterionAssessment[];
   criteria?: ApiPolicyCriterion[];
   policy?: ApiPayerPolicy;
@@ -56,7 +59,9 @@ export default function EvidenceMatrix({
   assessments: liveAssessments,
   criteria: liveCriteria,
   policy,
+  onFocusSource,
 }: Props) {
+  const focusSource = onFocusSource ?? onSourceClick;
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>
     setExpanded((prev) => {
@@ -157,7 +162,7 @@ export default function EvidenceMatrix({
                       {firstEv ? (
                         <button
                           className="matrix-evidence-link"
-                          onClick={(e) => { e.stopPropagation(); onSourceClick(firstEv.source_id, firstEv.excerpt); }}
+                          onClick={(e) => { e.stopPropagation(); focusSource(firstEv.source_id, firstEv.excerpt); }}
                           title={firstEv.excerpt}
                         >
                           {firstEv.excerpt.length > 80 ? firstEv.excerpt.slice(0, 80) + '…' : firstEv.excerpt}
@@ -227,7 +232,7 @@ export default function EvidenceMatrix({
                                   <li key={ev.evidence_id} className="detail-evidence-item">
                                     <button
                                       className="detail-evidence-btn"
-                                      onClick={(e) => { e.stopPropagation(); onSourceClick(ev.source_id, ev.excerpt); }}
+                                      onClick={(e) => { e.stopPropagation(); focusSource(ev.source_id, ev.excerpt); }}
                                     >
                                       <span className="detail-ev-excerpt">“{ev.excerpt}”</span>
                                       <span className="detail-ev-meta">

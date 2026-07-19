@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import './index.css';
 import './App.css';
 
@@ -12,24 +12,28 @@ import GapResolutionPanel from './components/GapResolutionPanel';
 import PriorAuthFormDraft from './components/PriorAuthFormDraft';
 import PacketStatusPanel  from './components/PacketStatusPanel';
 import SourceDrawer       from './components/SourceDrawer';
+import CasePicker         from './components/CasePicker';
+import ReadinessGauge     from './components/ReadinessGauge';
 
 import {
   runAnalysis,
+  runAnalysisStreamed,
   submitClarification,
   generatePacket,
   verifyPacket,
   draftForm,
-  getDemoCase,
   hasRunAnalysis as apiHasRun,
   hasClarificationRecorded,
   openQuestion,
   type ApiCase,
+  type ApiAgentEvent,
 } from './api/client';
 
 import { CLARIFICATION_RESPONSE } from './data/mockCase';
 
 type CenterTab = 'evidence' | 'note' | 'agents';
 type SelectedSource = { sourceId: string; excerpt?: string };
+type NoteFocus = { sourceId: string; excerpt?: string; nonce: number };
 
 export default function App() {
   const [liveCase,       setLiveCase]       = useState<ApiCase | null>(null);
@@ -40,15 +44,23 @@ export default function App() {
   const [selectedSource, setSelectedSource] = useState<SelectedSource | undefined>();
   const [centerTab,      setCenterTab]      = useState<CenterTab>('evidence');
   const [showFormDrawer, setShowFormDrawer] = useState(false);
+  const [analysisRunning, setAnalysisRunning] = useState(false);
+  const [streamEvents, setStreamEvents] = useState<ApiAgentEvent[]>([]);
+  const [showPicker, setShowPicker] = useState(true);
+  const [noteFocus, setNoteFocus] = useState<NoteFocus | undefined>();
 
-  // Auto-load the single demo case on mount
-  useEffect(() => {
-    getDemoCase().then((c) => {
-      setLiveCase(c);
-      setCaseId(c.case_id);
-    }).catch(() => {
-      // Backend unavailable — run in mock-only mode (caseId stays null)
-    });
+  // A case is chosen from the scenario picker (demo fixture or a real Abridge
+  // encounter). Each selection is a fresh intake-stage case.
+  const handleCaseSelected = useCallback((c: ApiCase) => {
+    setLiveCase(c);
+    setCaseId(c.case_id);
+    setShowPicker(false);
+    setStreamEvents([]);
+    setSelectedSource(undefined);
+    setNoteFocus(undefined);
+    setShowFormDrawer(false);
+    setApiError(null);
+    setCenterTab('evidence');
   }, []);
 
   // Derived booleans from live case
@@ -62,18 +74,41 @@ export default function App() {
       setCenterTab('evidence');
       return;
     }
+    // Minimum time to keep the fallback simulated progression on screen when
+    // the backend can't stream (so it's visible even in deterministic mode).
+    const MIN_SHOW_MS = 4600;
     setIsLoading(true);
+    setAnalysisRunning(true);
+    setStreamEvents([]);
     setLoadingStage('Running analysis…');
     setApiError(null);
+    const startedAt = performance.now();
     try {
-      const updated = await runAnalysis(caseId);
+      let updated: ApiCase;
+      try {
+        // Preferred path: stream each agent's completion live.
+        updated = await runAnalysisStreamed(caseId, (ev) => {
+          setStreamEvents((prev) => [...prev, ev]);
+        });
+      } catch {
+        // Fallback: single call + simulated progression held for MIN_SHOW_MS.
+        setStreamEvents([]);
+        updated = await runAnalysis(caseId);
+        const elapsed = performance.now() - startedAt;
+        if (elapsed < MIN_SHOW_MS) {
+          await new Promise((resolve) => setTimeout(resolve, MIN_SHOW_MS - elapsed));
+        }
+      }
       setLiveCase(updated);
-      setCenterTab('evidence');
+      // Land on the Activity tab so judges see the completed agent trail with
+      // each agent's proof-of-completion before moving to the evidence matrix.
+      setCenterTab('agents');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setApiError(`Analysis failed: ${msg}`);
     } finally {
       setIsLoading(false);
+      setAnalysisRunning(false);
       setLoadingStage('');
     }
   }, [caseId]);
@@ -122,6 +157,18 @@ export default function App() {
     setSelectedSource({ sourceId, excerpt });
   }
 
+  // Click-to-source: if the evidence is grounded in the encounter note, jump to
+  // the Note View and pulse the exact verbatim span; otherwise open the source
+  // drawer (chart items / clarifications aren't in the note body).
+  function handleFocusSource(sourceId: string, excerpt?: string) {
+    if (liveCase && sourceId === liveCase.encounter_note.source_id && excerpt) {
+      setCenterTab('note');
+      setNoteFocus({ sourceId, excerpt, nonce: Date.now() });
+    } else {
+      handleSourceClick(sourceId, excerpt);
+    }
+  }
+
   return (
     <div className="app-shell">
       <PatientBanner
@@ -144,6 +191,9 @@ export default function App() {
               <span className="chip chip-gray">MHP-IMG-2201</span>
               <span className="chip chip-gray">CPT 72148</span>
               <span className="pa-synthetic-tag">SYNTHETIC DATA</span>
+              <button className="pa-switch-case" onClick={() => setShowPicker(true)}>
+                ⇄ Switch case
+              </button>
             </div>
           </div>
 
@@ -179,7 +229,17 @@ export default function App() {
 
             {/* ── Center column ── */}
             <section className="pa-col pa-col-center">
-              {hasRunAnalysis ? (
+              {analysisRunning ? (
+                <div className="pa-col-content animate-fade-in">
+                  <AgentTimeline
+                    hasRunAnalysis
+                    hasClarification={false}
+                    running
+                    events={streamEvents.length ? streamEvents : undefined}
+                    onSourceClick={handleSourceClick}
+                  />
+                </div>
+              ) : hasRunAnalysis ? (
                 <>
                   <div className="pa-col-tabs">
                     {(
@@ -205,6 +265,7 @@ export default function App() {
                         <EvidenceMatrix
                           hasClarification={hasClarification}
                           onSourceClick={handleSourceClick}
+                          onFocusSource={handleFocusSource}
                           assessments={liveCase?.assessments}
                           criteria={liveCase?.criteria}
                           policy={liveCase?.policy}
@@ -228,6 +289,7 @@ export default function App() {
                           transcriptSourceId={liveCase?.encounter_transcript?.source_id}
                           assessments={liveCase?.assessments}
                           criteria={liveCase?.criteria}
+                          focus={noteFocus}
                         />
                       </div>
                     )}
@@ -237,6 +299,8 @@ export default function App() {
                           hasRunAnalysis={hasRunAnalysis}
                           hasClarification={hasClarification}
                           events={liveCase?.events}
+                          caseData={liveCase ?? undefined}
+                          onSourceClick={handleSourceClick}
                         />
                       </div>
                     )}
@@ -261,6 +325,9 @@ export default function App() {
 
             {/* ── Right column ── */}
             <aside className="pa-col pa-col-right">
+              {hasRunAnalysis && liveCase && (
+                <ReadinessGauge history={liveCase.readiness_history} />
+              )}
               <PacketStatusPanel
                 hasRunAnalysis={hasRunAnalysis}
                 hasClarification={hasClarification}
@@ -300,6 +367,13 @@ export default function App() {
             </div>
           </div>
         </div>
+      )}
+
+      {showPicker && (
+        <CasePicker
+          onCaseSelected={handleCaseSelected}
+          onClose={liveCase ? () => setShowPicker(false) : undefined}
+        />
       )}
     </div>
   );

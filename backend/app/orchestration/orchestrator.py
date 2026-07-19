@@ -198,13 +198,25 @@ class AuthLensOrchestrator:
 
     # ------------------------------------------------------------- operations
 
-    def start_analysis(self, case_id: str) -> AuthLensCase:
-        """intake_ready -> analyzing -> awaiting_clarification."""
+    def start_analysis(
+        self,
+        case_id: str,
+        *,
+        on_event: "Callable[[AgentEvent], None] | None" = None,
+    ) -> AuthLensCase:
+        """intake_ready -> analyzing -> awaiting_clarification.
+
+        ``on_event`` (optional) receives every AgentEvent as it is recorded so
+        the API can stream live per-agent progress. It is set only for this
+        call's thread and cleared afterward; it never changes the workflow.
+        """
         with self._case_lock(case_id):
             original = self._cases.get_case(case_id)
             require_status(original, (CaseStatus.INTAKE_READY,), "run")
             case = original.model_copy(deep=True)
             apply_transition(case, CaseStatus.ANALYZING, now=self._clock())
+            if on_event is not None:
+                self._recorder.set_sink(on_event)
             try:
                 self._run_analysis(case)
                 apply_transition(
@@ -214,6 +226,9 @@ class AuthLensOrchestrator:
             except Exception:
                 self._rollback(original, case)
                 raise
+            finally:
+                if on_event is not None:
+                    self._recorder.set_sink(None)
 
     def submit_clarification(
         self, case_id: str, submission: ClarificationSubmission

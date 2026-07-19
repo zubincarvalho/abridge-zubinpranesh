@@ -4,6 +4,8 @@ import { listScenarios, createCase, getDemoCase, type DemoScenario, type ApiCase
 
 type Props = {
   onCaseSelected: (c: ApiCase) => void;
+  /** When provided, the picker can be dismissed (only once a case is loaded). */
+  onClose?: () => void;
 };
 
 const RISK_CLS: Record<string, string> = {
@@ -17,7 +19,7 @@ const OUTCOME_CLS: Record<string, string> = {
   high_risk: 'chip-missing',
 };
 
-export default function CasePicker({ onCaseSelected }: Props) {
+export default function CasePicker({ onCaseSelected, onClose }: Props) {
   const [scenarios, setScenarios] = useState<DemoScenario[]>([]);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,12 +37,8 @@ export default function CasePicker({ onCaseSelected }: Props) {
     setLoadingId(scenario.scenario_id);
     setError(null);
     try {
-      let caseData: ApiCase;
-      if (scenario.fixture_id === 'lumbar_mri_prior_auth') {
-        caseData = await getDemoCase();
-      } else {
-        caseData = await createCase(scenario.fixture_id);
-      }
+      // Always create a fresh intake-stage case so repeated demos start clean.
+      const caseData = await createCase(scenario.fixture_id);
       onCaseSelected(caseData);
     } catch (err) {
       setError(`Could not load case: ${(err as Error).message}`);
@@ -62,6 +60,9 @@ export default function CasePicker({ onCaseSelected }: Props) {
           <div className="picker-policy-badge">
             Policy MHP-IMG-2201 · Meridian Health Plans (fictional) · Lumbar Spine MRI
           </div>
+          {onClose && (
+            <button className="picker-close" onClick={onClose} aria-label="Close">✕</button>
+          )}
         </div>
 
         <h2 className="picker-title">Select a Demo Case</h2>
